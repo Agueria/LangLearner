@@ -1,3 +1,4 @@
+// Home tab placeholder for language-learning dashboard content.
 import { StyleSheet, Text, View } from 'react-native';
 
 export default function HomeScreen() {

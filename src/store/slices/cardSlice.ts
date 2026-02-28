@@ -1,3 +1,4 @@
+// Redux slice for managing card state.
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Card } from '../../constants/types';
 

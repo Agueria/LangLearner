@@ -1,3 +1,4 @@
+// Deck represents a vocabulary collection the user studies.
 export interface Deck {
   id: string;
   title: string;
@@ -7,6 +8,7 @@ export interface Deck {
   cardCount: number;
 }
 
+// Card represents a word and its meaning within a deck.
 export interface Card {
   id: string;
   deckId: string;
@@ -15,6 +17,7 @@ export interface Card {
   createdAt: string;
 }
 
+// User captures profile data and identity.
 export interface User {
   id: string;
   email: string;

@@ -1,3 +1,4 @@
+// Redux slice for managing deck state.
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Deck } from '../../constants/types';
 

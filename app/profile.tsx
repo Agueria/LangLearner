@@ -1,3 +1,4 @@
+// Profile tab placeholder for user settings and progress.
 import { StyleSheet, Text, View } from 'react-native';
 
 export default function ProfileScreen() {
