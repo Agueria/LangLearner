@@ -1,1 +1,1 @@
-export const constantsPlaceholder = 'constants';
+export * from './types';

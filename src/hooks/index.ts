@@ -1,1 +1,2 @@
-export const hooksPlaceholder = 'hooks';
+export * from './useDecks';
+export * from './useCards';
