@@ -1,1 +1,2 @@
-export const componentsPlaceholder = 'components';
+// Central exports for reusable UI components.
+export * from './OfflineBanner';
