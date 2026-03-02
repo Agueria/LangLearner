@@ -1,6 +1,7 @@
 // Redux slice for managing deck state.
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Deck } from '../../constants/types';
+import { addCard, removeCard } from './cardSlice';
 
 const initialState: Deck[] = [];
 
@@ -20,6 +21,20 @@ const deckSlice = createSlice({
         state[index] = action.payload;
       }
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(addCard, (state, action) => {
+      const target = state.find((deck) => deck.id === action.payload.deckId);
+      if (target) {
+        target.cardCount += 1;
+      }
+    });
+    builder.addCase(removeCard, (state, action) => {
+      const target = state.find((deck) => deck.id === action.payload.deckId);
+      if (target && target.cardCount > 0) {
+        target.cardCount -= 1;
+      }
+    });
   },
 });
 
