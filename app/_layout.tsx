@@ -1,9 +1,10 @@
-// App root layout: wires Redux, persistence, and global UI for all tabs.
-import { Tabs } from 'expo-router';
+// App root layout: wires Redux, persistence, and global UI for all routes.
+import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { OfflineBanner } from '../src/components/OfflineBanner';
 import { persistor, store } from '../src/store/store';
 
@@ -19,35 +20,12 @@ export default function RootLayout() {
           </View>
         }
       >
-        <View style={styles.container}>
+        <GestureHandlerRootView style={styles.container}>
           <StatusBar style="auto" />
           {/* Global banner for connectivity changes. */}
           <OfflineBanner />
-          <Tabs
-            screenOptions={{
-              headerTitleAlign: 'center',
-            }}
-          >
-            <Tabs.Screen
-              name="index"
-              options={{
-                title: 'Home',
-              }}
-            />
-            <Tabs.Screen
-              name="decks"
-              options={{
-                title: 'Decks',
-              }}
-            />
-            <Tabs.Screen
-              name="profile"
-              options={{
-                title: 'Profile',
-              }}
-            />
-          </Tabs>
-        </View>
+          <Slot />
+        </GestureHandlerRootView>
       </PersistGate>
     </Provider>
   );

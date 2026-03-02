@@ -1,6 +1,12 @@
 // Redux slice for managing card state.
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Card } from '../../constants/types';
+import { removeDeck } from './deckSlice';
+
+type RemoveCardPayload = {
+  cardId: string;
+  deckId: string;
+};
 
 const initialState: Card[] = [];
 
@@ -11,8 +17,8 @@ const cardSlice = createSlice({
     addCard(state, action: PayloadAction<Card>) {
       state.push(action.payload);
     },
-    removeCard(state, action: PayloadAction<string>) {
-      return state.filter((card) => card.id !== action.payload);
+    removeCard(state, action: PayloadAction<RemoveCardPayload>) {
+      return state.filter((card) => card.id !== action.payload.cardId);
     },
     updateCard(state, action: PayloadAction<Card>) {
       const index = state.findIndex((card) => card.id === action.payload.id);
@@ -20,6 +26,11 @@ const cardSlice = createSlice({
         state[index] = action.payload;
       }
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(removeDeck, (state, action) =>
+      state.filter((card) => card.deckId !== action.payload)
+    );
   },
 });
 
