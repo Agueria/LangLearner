@@ -1,1 +1,1 @@
-export const servicesPlaceholder = 'services';
+export * from './translationService';
