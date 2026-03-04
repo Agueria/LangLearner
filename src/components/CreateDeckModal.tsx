@@ -116,7 +116,7 @@ export const CreateDeckModal = ({
             style={modalStyles.input}
           />
         </View>
-        <View style={modalStyles.actions}>
+        <View style={[modalStyles.actions, styles.actions]}>
           <Pressable style={modalStyles.cancelButton} onPress={onClose}>
             <Text style={modalStyles.cancelText}>Cancel</Text>
           </Pressable>
@@ -133,5 +133,8 @@ const styles = StyleSheet.create({
   title: {
     alignSelf: 'flex-end',
     textAlign: 'right',
+  },
+  actions: {
+    marginBottom: 16,
   },
 });
