@@ -1,11 +1,111 @@
 // Decks tab: list decks and create new ones.
 import { useCallback, useLayoutEffect, useState } from 'react';
 import { useNavigation, useRouter } from 'expo-router';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type ListRenderItemInfo,
+} from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
-import type { Deck } from '../../src/constants';
+import { COLORS, type Deck } from '../../src/constants';
 import { CreateDeckModal, DeckCard } from '../../src/components';
 import { useDecks } from '../../src/hooks';
+
+type DeckListItemProps = {
+  deck: Deck;
+  onDelete: (deckId: string) => void;
+  onPress: (deckId: string) => void;
+};
+const styles = StyleSheet.create({
+  addButton: {
+    alignItems: 'center',
+    backgroundColor: COLORS.primary,
+    borderRadius: 16,
+    height: 32,
+    justifyContent: 'center',
+    marginRight: 8,
+    width: 32,
+  },
+  addButtonText: {
+    color: COLORS.white,
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  container: {
+    backgroundColor: COLORS.background,
+    flex: 1,
+    padding: 16,
+  },
+  deleteAction: {
+    alignItems: 'center',
+    backgroundColor: COLORS.danger,
+    borderRadius: 14,
+    justifyContent: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 20,
+  },
+  deleteText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  emptyText: {
+    color: COLORS.mutedText,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  listContainer: {
+    paddingBottom: 24,
+  },
+});
+
+type HeaderAddButtonProps = {
+  onPress: () => void;
+};
+
+function HeaderAddButton({ onPress }: HeaderAddButtonProps) {
+  return (
+    <Pressable style={styles.addButton} onPress={onPress}>
+      <Text style={styles.addButtonText}>+</Text>
+    </Pressable>
+  );
+}
+
+function EmptyDeckList() {
+  return (
+    <Text style={styles.emptyText}>No decks yet. Tap + to create one.</Text>
+  );
+}
+
+function DeckListItem({ deck, onDelete, onPress }: DeckListItemProps) {
+  const handleDelete = useCallback(() => {
+    onDelete(deck.id);
+  }, [deck.id, onDelete]);
+
+  const renderRightActions = useCallback(
+    () => (
+      <Pressable style={styles.deleteAction} onPress={handleDelete}>
+        <Text style={styles.deleteText}>Delete</Text>
+      </Pressable>
+    ),
+    [handleDelete]
+  );
+
+  return (
+    <Swipeable renderRightActions={renderRightActions} rightThreshold={40}>
+      <DeckCard deck={deck} onPress={() => onPress(deck.id)} />
+    </Swipeable>
+  );
+}
 
 export default function DecksScreen() {
   const navigation = useNavigation();
@@ -35,25 +135,21 @@ export default function DecksScreen() {
     [removeDeck]
   );
 
-  const renderRightActions = useCallback(
-    (deckId: string) => (
-      <Pressable
-        style={styles.deleteAction}
-        onPress={() => handleDeleteDeck(deckId)}
-      >
-        <Text style={styles.deleteText}>Delete</Text>
-      </Pressable>
+  const renderItem = useCallback(
+    ({ item }: ListRenderItemInfo<Deck>) => (
+      <DeckListItem
+        deck={item}
+        onDelete={handleDeleteDeck}
+        onPress={handleOpenDeck}
+      />
     ),
-    [handleDeleteDeck]
+    [handleDeleteDeck, handleOpenDeck]
   );
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: () => (
-        <Pressable style={styles.addButton} onPress={handleOpenCreate}>
-          <Text style={styles.addButtonText}>+</Text>
-        </Pressable>
-      ),
+      // eslint-disable-next-line react/no-unstable-nested-components
+      headerRight: () => <HeaderAddButton onPress={handleOpenCreate} />,
     });
   }, [handleOpenCreate, navigation]);
 
@@ -69,67 +165,9 @@ export default function DecksScreen() {
         contentContainerStyle={
           decks.length === 0 ? styles.emptyContainer : styles.listContainer
         }
-        renderItem={({ item }: { item: Deck }) => (
-          <Swipeable
-            renderRightActions={() => renderRightActions(item.id)}
-            rightThreshold={40}
-          >
-            <DeckCard deck={item} onPress={() => handleOpenDeck(item.id)} />
-          </Swipeable>
-        )}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No decks yet. Tap + to create one.</Text>
-        }
+        renderItem={renderItem}
+        ListEmptyComponent={EmptyDeckList}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F7F7F2',
-    padding: 16,
-  },
-  listContainer: {
-    paddingBottom: 24,
-  },
-  emptyContainer: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#5B5B5B',
-    textAlign: 'center',
-  },
-  addButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1F6FEB',
-    marginRight: 8,
-  },
-  addButtonText: {
-    fontSize: 20,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  deleteAction: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#D62828',
-    borderRadius: 14,
-    marginBottom: 12,
-    paddingHorizontal: 20,
-  },
-  deleteText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});

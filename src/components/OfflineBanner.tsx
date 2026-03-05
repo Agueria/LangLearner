@@ -2,9 +2,29 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { COLORS } from '../constants';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 
-export const OfflineBanner = () => {
+const styles = StyleSheet.create({
+  banner: {
+    alignItems: 'center',
+    backgroundColor: COLORS.danger,
+    elevation: 999,
+    left: 0,
+    paddingBottom: 8,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    zIndex: 999,
+  },
+  text: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+});
+
+export function OfflineBanner() {
   const { isConnected, isInternetReachable } = useNetworkStatus();
   const isOffline = !(isConnected && isInternetReachable);
   const opacity = useRef(new Animated.Value(0)).current;
@@ -31,23 +51,4 @@ export const OfflineBanner = () => {
       <Text style={styles.text}>You are offline</Text>
     </Animated.View>
   );
-};
-
-const styles = StyleSheet.create({
-  banner: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#D62828',
-    alignItems: 'center',
-    paddingBottom: 8,
-    zIndex: 999,
-    elevation: 999,
-  },
-  text: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
+}

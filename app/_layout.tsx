@@ -8,6 +8,17 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { OfflineBanner } from '../src/components/OfflineBanner';
 import { persistor, store } from '../src/store/store';
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+  },
+});
+
 export default function RootLayout() {
   return (
     <Provider store={store}>
@@ -21,6 +32,7 @@ export default function RootLayout() {
         }
       >
         <GestureHandlerRootView style={styles.container}>
+          {/* eslint-disable-next-line react/style-prop-object */}
           <StatusBar style="auto" />
           {/* Global banner for connectivity changes. */}
           <OfflineBanner />
@@ -30,14 +42,3 @@ export default function RootLayout() {
     </Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

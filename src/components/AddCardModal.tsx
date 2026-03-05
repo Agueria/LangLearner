@@ -19,11 +19,20 @@ type AddCardModalProps = {
   deckId: string;
   onClose: () => void;
 };
-export const AddCardModal = ({
+
+const styles = StyleSheet.create({
+  actions: {
+    justifyContent: 'center',
+    marginBottom: 20,
+    marginTop: 8,
+  },
+});
+
+export function AddCardModal({
   visible,
   deckId,
   onClose,
-}: AddCardModalProps) => {
+}: AddCardModalProps) {
   const {
     word,
     setWord,
@@ -98,11 +107,4 @@ export const AddCardModal = ({
       </KeyboardAvoidingView>
     </Modal>
   );
-};
-const styles = StyleSheet.create({
-  actions: {
-    justifyContent: 'center',
-    marginTop: 8,
-    marginBottom: 20,
-  },
-});
+}

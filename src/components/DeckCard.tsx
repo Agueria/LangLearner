@@ -1,13 +1,68 @@
 // Card UI for a single deck in the list.
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import type { Deck } from '../constants';
+import { COLORS, type Deck } from '../constants';
 
 type DeckCardProps = {
   deck: Deck;
   onPress: () => void;
 };
 
-export const DeckCard = ({ deck, onPress }: DeckCardProps) => {
+const styles = StyleSheet.create({
+  card: {
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderRadius: 14,
+    elevation: 3,
+    flexDirection: 'row',
+    marginBottom: 12,
+    padding: 16,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+  },
+  coverImage: {
+    borderRadius: 12,
+    flex: 1,
+  },
+  description: {
+    color: COLORS.subtleText,
+    fontSize: 14,
+    marginBottom: 6,
+  },
+  info: {
+    flex: 1,
+  },
+  media: {
+    aspectRatio: 1,
+    marginRight: 12,
+    width: '22%',
+  },
+  meta: {
+    color: COLORS.mutedTextAlt,
+    fontSize: 12,
+  },
+  placeholder: {
+    alignItems: 'center',
+    backgroundColor: COLORS.secondarySurface,
+    borderRadius: 12,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  placeholderText: {
+    color: COLORS.primary,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  title: {
+    color: COLORS.text,
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+});
+
+export function DeckCard({ deck, onPress }: DeckCardProps) {
   const initial = deck.title.trim().charAt(0).toUpperCase();
 
   return (
@@ -34,59 +89,4 @@ export const DeckCard = ({ deck, onPress }: DeckCardProps) => {
       </View>
     </Pressable>
   );
-};
-
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  media: {
-    width: '22%',
-    aspectRatio: 1,
-    marginRight: 12,
-  },
-  coverImage: {
-    flex: 1,
-    borderRadius: 12,
-  },
-  placeholder: {
-    flex: 1,
-    borderRadius: 12,
-    backgroundColor: '#E9EEF9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeholderText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F6FEB',
-  },
-  info: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F1F1F',
-    marginBottom: 4,
-  },
-  description: {
-    fontSize: 14,
-    color: '#4E4E4E',
-    marginBottom: 6,
-  },
-  meta: {
-    fontSize: 12,
-    color: '#6B6B6B',
-  },
-});
+}

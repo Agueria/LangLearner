@@ -1,18 +1,10 @@
 // Home tab placeholder for language-learning dashboard content.
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function HomeScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Home</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
   },
   title: {
@@ -20,3 +12,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+export default function HomeScreen() {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Home</Text>
+    </View>
+  );
+}

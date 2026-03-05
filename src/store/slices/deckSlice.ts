@@ -1,7 +1,6 @@
 // Redux slice for managing deck state.
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { Deck } from '../../constants/types';
-import { addCard, removeCard } from './cardSlice';
+import type { Card, Deck } from '../../constants/types';
 
 const initialState: Deck[] = [];
 
@@ -10,31 +9,36 @@ const deckSlice = createSlice({
   initialState,
   reducers: {
     addDeck(state, action: PayloadAction<Deck>) {
-      state.push(action.payload);
+      return [...state, action.payload];
     },
     removeDeck(state, action: PayloadAction<string>) {
       return state.filter((deck) => deck.id !== action.payload);
     },
     updateDeck(state, action: PayloadAction<Deck>) {
-      const index = state.findIndex((deck) => deck.id === action.payload.id);
-      if (index !== -1) {
-        state[index] = action.payload;
-      }
+      return state.map((deck) =>
+        deck.id === action.payload.id ? action.payload : deck
+      );
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(addCard, (state, action) => {
-      const target = state.find((deck) => deck.id === action.payload.deckId);
-      if (target) {
-        target.cardCount += 1;
-      }
-    });
-    builder.addCase(removeCard, (state, action) => {
-      const target = state.find((deck) => deck.id === action.payload.deckId);
-      if (target && target.cardCount > 0) {
-        target.cardCount -= 1;
-      }
-    });
+    builder.addCase(
+      'cards/addCard',
+      (state, action: PayloadAction<Card>) =>
+        state.map((deck) =>
+          deck.id === action.payload.deckId
+            ? { ...deck, cardCount: deck.cardCount + 1 }
+            : deck
+        )
+    );
+    builder.addCase(
+      'cards/removeCard',
+      (state, action: PayloadAction<{ cardId: string; deckId: string }>) =>
+        state.map((deck) =>
+          deck.id === action.payload.deckId
+            ? { ...deck, cardCount: Math.max(0, deck.cardCount - 1) }
+            : deck
+        )
+    );
   },
 });
 

@@ -2,6 +2,7 @@
   "expo": {
     "name": "LinguaDecks",
     "slug": "linguadecks",
+    "scheme": "linguadecks",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

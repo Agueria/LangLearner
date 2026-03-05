@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import { useDecks, useImagePicker } from '../hooks';
-import type { Deck } from '../constants';
+import { COLORS, type Deck } from '../constants';
 import { modalStyles } from './modalStyles';
 
 type CreateDeckModalProps = {
@@ -24,10 +24,71 @@ type FormErrors = {
   title?: string;
 };
 
-export const CreateDeckModal = ({
+const styles = StyleSheet.create({
+  actions: {
+    marginBottom: 16,
+  },
+  cameraBody: {
+    alignItems: 'center',
+    backgroundColor: COLORS.slate,
+    borderRadius: 8,
+    height: 28,
+    justifyContent: 'center',
+    width: 44,
+  },
+  cameraIcon: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cameraLens: {
+    backgroundColor: COLORS.canvas,
+    borderColor: COLORS.primary,
+    borderRadius: 6,
+    borderWidth: 2,
+    height: 12,
+    width: 12,
+  },
+  cameraTop: {
+    backgroundColor: COLORS.slate,
+    borderRadius: 3,
+    height: 6,
+    marginBottom: 4,
+    width: 24,
+  },
+  coverImage: {
+    flex: 1,
+    width: '100%',
+  },
+  coverPlaceholder: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  coverPlaceholderText: {
+    color: COLORS.subtleText,
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 10,
+  },
+  coverPressable: {
+    aspectRatio: 16 / 9,
+    backgroundColor: COLORS.canvas,
+    borderColor: COLORS.border,
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  title: {
+    alignSelf: 'flex-end',
+    textAlign: 'right',
+  },
+});
+
+export function CreateDeckModal({
   visible,
   onClose,
-}: CreateDeckModalProps) => {
+}: CreateDeckModalProps) {
   const { addDeck } = useDecks();
   const { pickImage } = useImagePicker();
   const [title, setTitle] = useState('');
@@ -92,7 +153,7 @@ export const CreateDeckModal = ({
     addDeck(newDeck);
     onClose();
     resetForm();
-  }, [addDeck, description, onClose, resetForm, title, validate]);
+  }, [addDeck, coverImageUri, description, onClose, resetForm, title, validate]);
 
   return (
     <Modal
@@ -167,65 +228,4 @@ export const CreateDeckModal = ({
       </KeyboardAvoidingView>
     </Modal>
   );
-};
-
-const styles = StyleSheet.create({
-  title: {
-    alignSelf: 'flex-end',
-    textAlign: 'right',
-  },
-  coverPressable: {
-    width: '100%',
-    aspectRatio: 16 / 9,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#D7DCE5',
-    overflow: 'hidden',
-    backgroundColor: '#F5F7FB',
-  },
-  coverImage: {
-    flex: 1,
-    width: '100%',
-  },
-  coverPlaceholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  coverPlaceholderText: {
-    fontSize: 14,
-    color: '#4E4E4E',
-    fontWeight: '600',
-    marginTop: 10,
-  },
-  cameraIcon: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cameraTop: {
-    width: 24,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#3E4C64',
-    marginBottom: 4,
-  },
-  cameraBody: {
-    width: 44,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: '#3E4C64',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cameraLens: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#F5F7FB',
-    borderWidth: 2,
-    borderColor: '#1F6FEB',
-  },
-  actions: {
-    marginBottom: 16,
-  },
-});
+}

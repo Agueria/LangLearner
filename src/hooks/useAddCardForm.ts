@@ -39,13 +39,14 @@ export const useAddCardForm = ({ deckId, onClose }: UseAddCardFormArgs) => {
     }
   }, []);
 
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       if (cooldownTimerRef.current) {
         clearTimeout(cooldownTimerRef.current);
       }
-    };
-  }, []);
+    },
+    []
+  );
 
   const validate = useCallback((): FormErrors => {
     const nextErrors: FormErrors = {};

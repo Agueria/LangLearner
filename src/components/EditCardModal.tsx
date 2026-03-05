@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import type { Card } from '../constants';
+import { COLORS, type Card } from '../constants';
 import { useCards } from '../hooks';
 import { modalStyles } from './modalStyles';
 
@@ -25,11 +25,31 @@ type FormErrors = {
   meaning?: string;
 };
 
-export const EditCardModal = ({
+const styles = StyleSheet.create({
+  actions: {
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  deleteButton: {
+    borderColor: COLORS.danger,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginRight: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  deleteText: {
+    color: COLORS.danger,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+});
+
+export function EditCardModal({
   visible,
   card,
   onClose,
-}: EditCardModalProps) => {
+}: EditCardModalProps) {
   const { updateCard, removeCard } = useCards();
   const [word, setWord] = useState('');
   const [meaning, setMeaning] = useState('');
@@ -151,24 +171,4 @@ export const EditCardModal = ({
       </KeyboardAvoidingView>
     </Modal>
   );
-};
-
-const styles = StyleSheet.create({
-  actions: {
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  deleteButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginRight: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#D62828',
-  },
-  deleteText: {
-    fontSize: 14,
-    color: '#D62828',
-    fontWeight: '600',
-  },
-});
+}

@@ -1,10 +1,80 @@
 // Deck detail screen: shows cards and allows adding new ones.
 import { useCallback, useMemo, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type ListRenderItemInfo,
+} from 'react-native';
 import { AddCardModal, CardRow, EditCardModal } from '../../src/components';
 import { useCards, useDecks } from '../../src/hooks';
-import type { Card } from '../../src/constants';
+import { COLORS, type Card } from '../../src/constants';
+
+const styles = StyleSheet.create({
+  addButton: {
+    alignItems: 'center',
+    backgroundColor: COLORS.primary,
+    borderRadius: 16,
+    elevation: 10,
+    justifyContent: 'center',
+    marginBottom: 16,
+    marginTop: 24,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    zIndex: 10,
+  },
+  addButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+  },
+  backText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  container: {
+    backgroundColor: COLORS.background,
+    flex: 1,
+    padding: 16,
+  },
+  emptyContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  emptyText: {
+    color: COLORS.mutedText,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  header: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    marginTop: 56,
+  },
+  listContainer: {
+    paddingBottom: 96,
+  },
+  title: {
+    alignSelf: 'flex-end',
+    color: COLORS.text,
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'right',
+  },
+});
 
 export default function DeckDetailScreen() {
   const router = useRouter();
@@ -43,6 +113,13 @@ export default function DeckDetailScreen() {
     router.push('/(tabs)/decks');
   }, [router]);
 
+  const renderItem = useCallback(
+    ({ item }: ListRenderItemInfo<Card>) => (
+      <CardRow card={item} onPress={() => handleOpenEdit(item)} />
+    ),
+    [handleOpenEdit]
+  );
+
   if (!deck) {
     return (
       <View style={styles.container}>
@@ -71,9 +148,7 @@ export default function DeckDetailScreen() {
         contentContainerStyle={
           deckCards.length === 0 ? styles.emptyContainer : styles.listContainer
         }
-        renderItem={({ item }: { item: Card }) => (
-          <CardRow card={item} onPress={() => handleOpenEdit(item)} />
-        )}
+        renderItem={renderItem}
         ListEmptyComponent={
           <Text style={styles.emptyText}>
             No cards yet. Tap Add Card to create one.
@@ -97,65 +172,3 @@ export default function DeckDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F7F7F2',
-    padding: 16,
-  },
-  header: {
-    marginTop: 56,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#1F1F1F',
-    alignSelf: 'flex-end',
-    textAlign: 'right',
-  },
-  backText: {
-    fontSize: 14,
-    color: '#1F6FEB',
-    fontWeight: '600',
-  },
-  listContainer: {
-    paddingBottom: 96,
-  },
-  emptyContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#5B5B5B',
-    textAlign: 'center',
-  },
-  addButton: {
-    alignSelf: 'center',
-    marginTop: 24,
-    marginBottom: 16,
-    paddingHorizontal: 32,
-    backgroundColor: '#1F6FEB',
-    borderRadius: 16,
-    paddingVertical: 14,
-    alignItems: 'center',
-    zIndex: 10,
-    elevation: 10,
-    shadowColor: '#1F6FEB',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-  },
-  addButtonText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-});
