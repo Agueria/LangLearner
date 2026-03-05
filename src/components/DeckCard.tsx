@@ -12,13 +12,19 @@ export const DeckCard = ({ deck, onPress }: DeckCardProps) => {
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
-      {deck.coverImage ? (
-        <Image source={{ uri: deck.coverImage }} style={styles.coverImage} />
-      ) : (
-        <View style={styles.placeholder}>
-          <Text style={styles.placeholderText}>{initial || '?'}</Text>
-        </View>
-      )}
+      <View style={styles.media}>
+        {deck.coverImage ? (
+          <Image
+            source={{ uri: deck.coverImage }}
+            style={styles.coverImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.placeholder}>
+            <Text style={styles.placeholderText}>{initial || '?'}</Text>
+          </View>
+        )}
+      </View>
       <View style={styles.info}>
         <Text style={styles.title}>{deck.title}</Text>
         {deck.description.length > 0 && (
@@ -44,17 +50,18 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 3,
   },
-  coverImage: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
+  media: {
+    width: '22%',
+    aspectRatio: 1,
     marginRight: 12,
   },
-  placeholder: {
-    width: 56,
-    height: 56,
+  coverImage: {
+    flex: 1,
     borderRadius: 12,
-    marginRight: 12,
+  },
+  placeholder: {
+    flex: 1,
+    borderRadius: 12,
     backgroundColor: '#E9EEF9',
     alignItems: 'center',
     justifyContent: 'center',

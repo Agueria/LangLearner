@@ -1,6 +1,7 @@
 // Modal form for creating a new deck.
 import { useCallback, useEffect, useState } from 'react';
 import {
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -10,7 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useDecks } from '../hooks';
+import { useDecks, useImagePicker } from '../hooks';
 import type { Deck } from '../constants';
 import { modalStyles } from './modalStyles';
 
@@ -28,14 +29,17 @@ export const CreateDeckModal = ({
   onClose,
 }: CreateDeckModalProps) => {
   const { addDeck } = useDecks();
+  const { pickImage } = useImagePicker();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [coverImageUri, setCoverImageUri] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const resetForm = useCallback(() => {
     setTitle('');
     setDescription('');
+    setCoverImageUri(null);
     setErrors({});
     setHasSubmitted(false);
   }, []);
@@ -59,6 +63,14 @@ export const CreateDeckModal = ({
     return nextErrors;
   }, [title]);
 
+  const handleSelectCover = useCallback(async () => {
+    const selectedUri = await pickImage();
+
+    if (selectedUri) {
+      setCoverImageUri(selectedUri);
+    }
+  }, [pickImage]);
+
   const handleSubmit = useCallback(() => {
     setHasSubmitted(true);
     const nextErrors = validate();
@@ -72,6 +84,7 @@ export const CreateDeckModal = ({
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       title: title.trim(),
       description: description.trim(),
+      coverImage: coverImageUri ?? undefined,
       createdAt: new Date().toISOString(),
       cardCount: 0,
     };
@@ -94,6 +107,33 @@ export const CreateDeckModal = ({
         style={modalStyles.sheet}
       >
         <Text style={[modalStyles.title, styles.title]}>New Deck</Text>
+        <View style={modalStyles.fieldGroup}>
+          <Text style={modalStyles.label}>Cover Photo</Text>
+          <Pressable
+            style={styles.coverPressable}
+            onPress={handleSelectCover}
+          >
+            {coverImageUri ? (
+              <Image
+                source={{ uri: coverImageUri }}
+                style={styles.coverImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.coverPlaceholder}>
+                <View style={styles.cameraIcon}>
+                  <View style={styles.cameraTop} />
+                  <View style={styles.cameraBody}>
+                    <View style={styles.cameraLens} />
+                  </View>
+                </View>
+                <Text style={styles.coverPlaceholderText}>
+                  Tap to add photo
+                </Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
         <View style={modalStyles.fieldGroup}>
           <Text style={modalStyles.label}>Title *</Text>
           <TextInput
@@ -133,6 +173,57 @@ const styles = StyleSheet.create({
   title: {
     alignSelf: 'flex-end',
     textAlign: 'right',
+  },
+  coverPressable: {
+    width: '100%',
+    aspectRatio: 16 / 9,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#D7DCE5',
+    overflow: 'hidden',
+    backgroundColor: '#F5F7FB',
+  },
+  coverImage: {
+    flex: 1,
+    width: '100%',
+  },
+  coverPlaceholder: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  coverPlaceholderText: {
+    fontSize: 14,
+    color: '#4E4E4E',
+    fontWeight: '600',
+    marginTop: 10,
+  },
+  cameraIcon: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cameraTop: {
+    width: 24,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#3E4C64',
+    marginBottom: 4,
+  },
+  cameraBody: {
+    width: 44,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#3E4C64',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cameraLens: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#F5F7FB',
+    borderWidth: 2,
+    borderColor: '#1F6FEB',
   },
   actions: {
     marginBottom: 16,
