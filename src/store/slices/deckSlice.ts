@@ -1,8 +1,21 @@
 // Redux slice for managing deck state.
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, type UnknownAction } from '@reduxjs/toolkit';
 import type { Card, Deck } from '../../constants/types';
 
+type RemoveCardPayload = {
+  cardId: string;
+  deckId: string;
+};
+
 const initialState: Deck[] = [];
+
+const isAddCardAction = (action: UnknownAction): action is PayloadAction<Card> =>
+  action.type === 'cards/addCard';
+
+const isRemoveCardAction = (
+  action: UnknownAction
+): action is PayloadAction<RemoveCardPayload> =>
+  action.type === 'cards/removeCard';
 
 const deckSlice = createSlice({
   name: 'decks',
@@ -21,18 +34,18 @@ const deckSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(
-      'cards/addCard',
-      (state, action: PayloadAction<Card>) =>
+    builder.addMatcher(
+      isAddCardAction,
+      (state, action) =>
         state.map((deck) =>
           deck.id === action.payload.deckId
             ? { ...deck, cardCount: deck.cardCount + 1 }
             : deck
         )
     );
-    builder.addCase(
-      'cards/removeCard',
-      (state, action: PayloadAction<{ cardId: string; deckId: string }>) =>
+    builder.addMatcher(
+      isRemoveCardAction,
+      (state, action) =>
         state.map((deck) =>
           deck.id === action.payload.deckId
             ? { ...deck, cardCount: Math.max(0, deck.cardCount - 1) }

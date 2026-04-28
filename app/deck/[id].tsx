@@ -20,8 +20,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     elevation: 10,
     justifyContent: 'center',
-    marginBottom: 16,
-    marginTop: 24,
     paddingHorizontal: 32,
     paddingVertical: 14,
     shadowColor: COLORS.primary,
@@ -48,6 +46,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  disabledButton: {
+    opacity: 0.5,
+  },
   emptyContainer: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -56,6 +57,11 @@ const styles = StyleSheet.create({
     color: COLORS.mutedText,
     fontSize: 16,
     textAlign: 'center',
+  },
+  footerActions: {
+    gap: 10,
+    marginBottom: 16,
+    marginTop: 24,
   },
   header: {
     alignItems: 'center',
@@ -66,6 +72,19 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingBottom: 96,
+  },
+  quizButton: {
+    alignItems: 'center',
+    backgroundColor: COLORS.slate,
+    borderRadius: 16,
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+  },
+  quizButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '600',
   },
   title: {
     alignSelf: 'flex-end',
@@ -112,6 +131,9 @@ export default function DeckDetailScreen() {
   const handleBackToDecks = useCallback(() => {
     router.push('/(tabs)/decks');
   }, [router]);
+  const handleStartQuiz = useCallback(() => {
+    router.push(`/quiz/${deckId}`);
+  }, [deckId, router]);
 
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<Card>) => (
@@ -155,9 +177,21 @@ export default function DeckDetailScreen() {
           </Text>
         }
       />
-      <Pressable style={styles.addButton} onPress={handleOpenAdd}>
-        <Text style={styles.addButtonText}>Add Card</Text>
-      </Pressable>
+      <View style={styles.footerActions}>
+        <Pressable
+          style={[
+            styles.quizButton,
+            deckCards.length === 0 && styles.disabledButton,
+          ]}
+          onPress={handleStartQuiz}
+          disabled={deckCards.length === 0}
+        >
+          <Text style={styles.quizButtonText}>Start Quiz</Text>
+        </Pressable>
+        <Pressable style={styles.addButton} onPress={handleOpenAdd}>
+          <Text style={styles.addButtonText}>Add Card</Text>
+        </Pressable>
+      </View>
       <AddCardModal
         visible={isAddModalOpen}
         deckId={deckId}
