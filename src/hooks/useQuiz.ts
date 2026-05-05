@@ -16,7 +16,10 @@ type UseQuizResult = {
   correctCount: number;
   incorrectCount: number;
   isAnswerVisible: boolean;
-  progressLabel: string;
+  progressLabel: {
+    current: number;
+    total: number;
+  };
   answerCard: (answer: QuizAnswer) => QuizResult & { isComplete: boolean };
   resetQuiz: () => void;
   showAnswer: () => void;
@@ -30,13 +33,13 @@ export const useQuiz = (cards: Card[]): UseQuizResult => {
   const totalCount = cards.length;
   const currentCard = cards[currentIndex] ?? null;
 
-  const progressLabel = useMemo(() => {
-    if (totalCount === 0) {
-      return 'No cards';
-    }
-
-    return `Card ${currentIndex + 1} of ${totalCount}`;
-  }, [currentIndex, totalCount]);
+  const progressLabel = useMemo(
+    () => ({
+      current: totalCount === 0 ? 0 : currentIndex + 1,
+      total: totalCount,
+    }),
+    [currentIndex, totalCount]
+  );
 
   const resetQuiz = useCallback(() => {
     setCurrentIndex(0);

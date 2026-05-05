@@ -2,6 +2,7 @@
 import { useCallback, useLayoutEffect, useState } from 'react';
 import { useNavigation, useRouter } from 'expo-router';
 import {
+  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -9,10 +10,11 @@ import {
   View,
   type ListRenderItemInfo,
 } from 'react-native';
-import { Swipeable } from 'react-native-gesture-handler';
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { useTranslation } from 'react-i18next';
 import { COLORS, type Deck } from '../../src/constants';
 import { CreateDeckModal, DeckCard } from '../../src/components';
-import { useDecks } from '../../src/hooks';
+import { useDecks, useThemeColors } from '../../src/hooks';
 
 type DeckListItemProps = {
   deck: Deck;
@@ -81,12 +83,18 @@ function HeaderAddButton({ onPress }: HeaderAddButtonProps) {
 }
 
 function EmptyDeckList() {
+  const { t } = useTranslation();
+  const colors = useThemeColors();
+
   return (
-    <Text style={styles.emptyText}>No decks yet. Tap + to create one.</Text>
+    <Text style={[styles.emptyText, { color: colors.mutedText }]}>
+      {t('decks.empty')}
+    </Text>
   );
 }
 
 function DeckListItem({ deck, onDelete, onPress }: DeckListItemProps) {
+  const { t } = useTranslation();
   const handleDelete = useCallback(() => {
     onDelete(deck.id);
   }, [deck.id, onDelete]);
@@ -94,10 +102,10 @@ function DeckListItem({ deck, onDelete, onPress }: DeckListItemProps) {
   const renderRightActions = useCallback(
     () => (
       <Pressable style={styles.deleteAction} onPress={handleDelete}>
-        <Text style={styles.deleteText}>Delete</Text>
+        <Text style={styles.deleteText}>{t('actions.delete')}</Text>
       </Pressable>
     ),
-    [handleDelete]
+    [handleDelete, t],
   );
 
   return (
@@ -110,7 +118,9 @@ function DeckListItem({ deck, onDelete, onPress }: DeckListItemProps) {
 export default function DecksScreen() {
   const navigation = useNavigation();
   const router = useRouter();
+  const { t } = useTranslation();
   const { decks, removeDeck } = useDecks();
+  const colors = useThemeColors();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const handleOpenCreate = useCallback(() => {
@@ -125,25 +135,28 @@ export default function DecksScreen() {
     (deckId: string) => {
       router.push(`/deck/${deckId}`);
     },
-    [router]
+    [router],
   );
 
   const handleDeleteDeck = useCallback(
     (deckId: string) => {
-      removeDeck(deckId);
+      Alert.alert(t('actions.delete'), t('decks.deck'), [
+        { text: t('actions.cancel'), style: 'cancel' },
+        {
+          text: t('actions.delete'),
+          style: 'destructive',
+          onPress: () => removeDeck(deckId),
+        },
+      ]);
     },
-    [removeDeck]
+    [removeDeck, t],
   );
 
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<Deck>) => (
-      <DeckListItem
-        deck={item}
-        onDelete={handleDeleteDeck}
-        onPress={handleOpenDeck}
-      />
+      <DeckListItem deck={item} onDelete={handleDeleteDeck} onPress={handleOpenDeck} />
     ),
-    [handleDeleteDeck, handleOpenDeck]
+    [handleDeleteDeck, handleOpenDeck],
   );
 
   useLayoutEffect(() => {
@@ -154,17 +167,12 @@ export default function DecksScreen() {
   }, [handleOpenCreate, navigation]);
 
   return (
-    <View style={styles.container}>
-      <CreateDeckModal
-        visible={isCreateModalOpen}
-        onClose={handleCloseCreate}
-      />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <CreateDeckModal visible={isCreateModalOpen} onClose={handleCloseCreate} />
       <FlatList
         data={decks}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={
-          decks.length === 0 ? styles.emptyContainer : styles.listContainer
-        }
+        contentContainerStyle={decks.length === 0 ? styles.emptyContainer : styles.listContainer}
         renderItem={renderItem}
         ListEmptyComponent={EmptyDeckList}
       />

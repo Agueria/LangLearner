@@ -1,6 +1,8 @@
 // Card UI for a single deck in the list.
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS, type Deck } from '../constants';
+import { useThemeColors } from '../hooks';
 
 type DeckCardProps = {
   deck: Deck;
@@ -63,10 +65,18 @@ const styles = StyleSheet.create({
 });
 
 export function DeckCard({ deck, onPress }: DeckCardProps) {
+  const { t } = useTranslation();
+  const colors = useThemeColors();
   const initial = deck.title.trim().charAt(0).toUpperCase();
 
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <Pressable
+      style={[
+        styles.card,
+        { backgroundColor: colors.surface, shadowColor: colors.shadow },
+      ]}
+      onPress={onPress}
+    >
       <View style={styles.media}>
         {deck.coverImage ? (
           <Image
@@ -75,17 +85,30 @@ export function DeckCard({ deck, onPress }: DeckCardProps) {
             resizeMode="cover"
           />
         ) : (
-          <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>{initial || '?'}</Text>
+          <View
+            style={[
+              styles.placeholder,
+              { backgroundColor: colors.secondarySurface },
+            ]}
+          >
+            <Text style={[styles.placeholderText, { color: colors.primary }]}>
+              {initial || '?'}
+            </Text>
           </View>
         )}
       </View>
       <View style={styles.info}>
-        <Text style={styles.title}>{deck.title}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>
+          {deck.title}
+        </Text>
         {deck.description.length > 0 && (
-          <Text style={styles.description}>{deck.description}</Text>
+          <Text style={[styles.description, { color: colors.subtleText }]}>
+            {deck.description}
+          </Text>
         )}
-        <Text style={styles.meta}>{deck.cardCount} cards</Text>
+        <Text style={[styles.meta, { color: colors.mutedTextAlt }]}>
+          {t('decks.cards', { count: deck.cardCount })}
+        </Text>
       </View>
     </Pressable>
   );

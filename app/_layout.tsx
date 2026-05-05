@@ -6,6 +6,7 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { OfflineBanner } from '../src/components/OfflineBanner';
+import '../src/localization/i18n';
 import { persistor, store } from '../src/store/store';
 
 const styles = StyleSheet.create({

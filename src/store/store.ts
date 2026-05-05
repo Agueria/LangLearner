@@ -13,17 +13,19 @@ import {
 } from 'redux-persist';
 import deckReducer from './slices/deckSlice';
 import cardReducer from './slices/cardSlice';
+import settingsReducer from './slices/settingsSlice';
 
 const rootReducer = combineReducers({
   decks: deckReducer,
   cards: cardReducer,
+  settings: settingsReducer,
 });
 
 // Persist decks and cards to local storage.
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['decks', 'cards'],
+  whitelist: ['decks', 'cards', 'settings'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

@@ -11,17 +11,15 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useDecks, useImagePicker } from '../hooks';
+import { useTranslation } from 'react-i18next';
+import { useDecks, useImagePicker, useThemeColors } from '../hooks';
 import { COLORS, type Deck } from '../constants';
+import { validateDeckForm, type DeckFormErrors } from '../utils/validation';
 import { modalStyles } from './modalStyles';
 
 type CreateDeckModalProps = {
   visible: boolean;
   onClose: () => void;
-};
-
-type FormErrors = {
-  title?: string;
 };
 
 const styles = StyleSheet.create({
@@ -91,10 +89,12 @@ export function CreateDeckModal({
 }: CreateDeckModalProps) {
   const { addDeck } = useDecks();
   const { pickImage } = useImagePicker();
+  const colors = useThemeColors();
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [coverImageUri, setCoverImageUri] = useState<string | null>(null);
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState<DeckFormErrors>({});
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const resetForm = useCallback(() => {
@@ -111,18 +111,17 @@ export function CreateDeckModal({
     }
   }, [resetForm, visible]);
 
-  const validate = useCallback((): FormErrors => {
-    const nextErrors: FormErrors = {};
-    const trimmedTitle = title.trim();
-
-    if (trimmedTitle.length === 0) {
-      nextErrors.title = 'Title is required.';
-    } else if (trimmedTitle.length > 50) {
-      nextErrors.title = 'Title must be 50 characters or fewer.';
-    }
-
-    return nextErrors;
-  }, [title]);
+  const validate = useCallback(
+    () =>
+      validateDeckForm(title, {
+        meaningRequired: t('errors.meaningRequired'),
+        titleRequired: t('errors.titleRequired'),
+        titleTooLong: t('errors.titleTooLong'),
+        wordRequired: t('errors.wordRequired'),
+        wordTooLong: t('errors.wordTooLong'),
+      }),
+    [t, title]
+  );
 
   const handleSelectCover = useCallback(async () => {
     const selectedUri = await pickImage();
@@ -165,13 +164,20 @@ export function CreateDeckModal({
       <Pressable style={modalStyles.backdrop} onPress={onClose} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={modalStyles.sheet}
+        style={[modalStyles.sheet, { backgroundColor: colors.surface }]}
       >
-        <Text style={[modalStyles.title, styles.title]}>New Deck</Text>
+        <Text style={[modalStyles.title, styles.title, { color: colors.text }]}>
+          {t('decks.newDeck')}
+        </Text>
         <View style={modalStyles.fieldGroup}>
-          <Text style={modalStyles.label}>Cover Photo</Text>
+          <Text style={[modalStyles.label, { color: colors.text }]}>
+            {t('decks.coverPhoto')}
+          </Text>
           <Pressable
-            style={styles.coverPressable}
+            style={[
+              styles.coverPressable,
+              { backgroundColor: colors.canvas, borderColor: colors.border },
+            ]}
             onPress={handleSelectCover}
           >
             {coverImageUri ? (
@@ -189,40 +195,54 @@ export function CreateDeckModal({
                   </View>
                 </View>
                 <Text style={styles.coverPlaceholderText}>
-                  Tap to add photo
+                  {t('decks.addPhoto')}
                 </Text>
               </View>
             )}
           </Pressable>
         </View>
         <View style={modalStyles.fieldGroup}>
-          <Text style={modalStyles.label}>Title *</Text>
+          <Text style={[modalStyles.label, { color: colors.text }]}>
+            {t('decks.titleLabel')}
+          </Text>
           <TextInput
             value={title}
             onChangeText={setTitle}
-            placeholder="e.g. Travel Vocabulary"
+            placeholder={t('decks.titlePlaceholder')}
             maxLength={50}
-            style={modalStyles.input}
+            style={[
+              modalStyles.input,
+              { borderColor: colors.borderLight, color: colors.text },
+            ]}
+            placeholderTextColor={colors.mutedText}
           />
           {hasSubmitted && errors.title && (
             <Text style={modalStyles.errorText}>{errors.title}</Text>
           )}
         </View>
         <View style={modalStyles.fieldGroup}>
-          <Text style={modalStyles.label}>Description</Text>
+          <Text style={[modalStyles.label, { color: colors.text }]}>
+            {t('decks.description')}
+          </Text>
           <TextInput
             value={description}
             onChangeText={setDescription}
-            placeholder="Optional"
-            style={modalStyles.input}
+            placeholder={t('decks.descriptionPlaceholder')}
+            style={[
+              modalStyles.input,
+              { borderColor: colors.borderLight, color: colors.text },
+            ]}
+            placeholderTextColor={colors.mutedText}
           />
         </View>
         <View style={[modalStyles.actions, styles.actions]}>
           <Pressable style={modalStyles.cancelButton} onPress={onClose}>
-            <Text style={modalStyles.cancelText}>Cancel</Text>
+            <Text style={[modalStyles.cancelText, { color: colors.subtleText }]}>
+              {t('actions.cancel')}
+            </Text>
           </Pressable>
           <Pressable style={modalStyles.submitButton} onPress={handleSubmit}>
-            <Text style={modalStyles.submitText}>Create</Text>
+            <Text style={modalStyles.submitText}>{t('actions.create')}</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>

@@ -9,8 +9,9 @@ import {
   View,
   type ListRenderItemInfo,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { AddCardModal, CardRow, EditCardModal } from '../../src/components';
-import { useCards, useDecks } from '../../src/hooks';
+import { useCards, useDecks, useThemeColors } from '../../src/hooks';
 import { COLORS, type Card } from '../../src/constants';
 
 const styles = StyleSheet.create({
@@ -97,6 +98,8 @@ const styles = StyleSheet.create({
 
 export default function DeckDetailScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const colors = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const deckId = typeof id === 'string' ? id : '';
   const { decks } = useDecks();
@@ -144,25 +147,33 @@ export default function DeckDetailScreen() {
 
   if (!deck) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
           <Pressable style={styles.backButton} onPress={handleBackToDecks}>
-            <Text style={styles.backText}>Back to Decks</Text>
+            <Text style={[styles.backText, { color: colors.primary }]}>
+              {t('actions.backToDecks')}
+            </Text>
           </Pressable>
-          <Text style={styles.title}>Deck</Text>
+          <Text style={[styles.title, { color: colors.text }]}>
+            {t('decks.deck')}
+          </Text>
         </View>
-        <Text style={styles.emptyText}>Deck not found.</Text>
+        <Text style={[styles.emptyText, { color: colors.mutedText }]}>
+          {t('decks.deckNotFound')}
+        </Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={handleBackToDecks}>
-          <Text style={styles.backText}>Back to Decks</Text>
+          <Text style={[styles.backText, { color: colors.primary }]}>
+            {t('actions.backToDecks')}
+          </Text>
         </Pressable>
-        <Text style={styles.title}>{deck.title}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{deck.title}</Text>
       </View>
       <FlatList
         data={deckCards}
@@ -172,8 +183,8 @@ export default function DeckDetailScreen() {
         }
         renderItem={renderItem}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>
-            No cards yet. Tap Add Card to create one.
+          <Text style={[styles.emptyText, { color: colors.mutedText }]}>
+            {t('decks.emptyCards')}
           </Text>
         }
       />
@@ -186,10 +197,10 @@ export default function DeckDetailScreen() {
           onPress={handleStartQuiz}
           disabled={deckCards.length === 0}
         >
-          <Text style={styles.quizButtonText}>Start Quiz</Text>
+          <Text style={styles.quizButtonText}>{t('decks.startQuiz')}</Text>
         </Pressable>
         <Pressable style={styles.addButton} onPress={handleOpenAdd}>
-          <Text style={styles.addButtonText}>Add Card</Text>
+          <Text style={styles.addButtonText}>{t('decks.addCard')}</Text>
         </Pressable>
       </View>
       <AddCardModal
@@ -205,4 +216,3 @@ export default function DeckDetailScreen() {
     </View>
   );
 }
-

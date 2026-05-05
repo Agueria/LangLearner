@@ -1,13 +1,10 @@
 // Form logic for adding cards with auto-translation.
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Card } from '../constants';
 import { translateWord } from '../services/translationService';
+import { validateCardForm, type CardFormErrors } from '../utils/validation';
 import { useCards } from './useCards';
-
-type FormErrors = {
-  word?: string;
-  meaning?: string;
-};
 
 type UseAddCardFormArgs = {
   deckId: string;
@@ -16,9 +13,10 @@ type UseAddCardFormArgs = {
 
 export const useAddCardForm = ({ deckId, onClose }: UseAddCardFormArgs) => {
   const { addCard } = useCards();
+  const { t } = useTranslation();
   const [word, setWord] = useState('');
   const [meaning, setMeaning] = useState('');
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState<CardFormErrors>({});
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [translateError, setTranslateError] = useState('');
@@ -48,28 +46,22 @@ export const useAddCardForm = ({ deckId, onClose }: UseAddCardFormArgs) => {
     []
   );
 
-  const validate = useCallback((): FormErrors => {
-    const nextErrors: FormErrors = {};
-    const trimmedWord = word.trim();
-    const trimmedMeaning = meaning.trim();
-
-    if (trimmedWord.length === 0) {
-      nextErrors.word = 'Word is required.';
-    } else if (trimmedWord.length > 100) {
-      nextErrors.word = 'Word must be 100 characters or fewer.';
-    }
-
-    if (trimmedMeaning.length === 0) {
-      nextErrors.meaning = 'Meaning is required.';
-    }
-
-    return nextErrors;
-  }, [meaning, word]);
+  const validate = useCallback(
+    () =>
+      validateCardForm(word, meaning, {
+        meaningRequired: t('errors.meaningRequired'),
+        titleRequired: t('errors.titleRequired'),
+        titleTooLong: t('errors.titleTooLong'),
+        wordRequired: t('errors.wordRequired'),
+        wordTooLong: t('errors.wordTooLong'),
+      }),
+    [meaning, t, word]
+  );
 
   const handleTranslate = useCallback(async () => {
     const trimmedWord = word.trim();
     if (!trimmedWord) {
-      setTranslateError('Enter a word first');
+      setTranslateError(t('errors.wordFirst'));
       return;
     }
     if (isCooldown) {
@@ -85,7 +77,7 @@ export const useAddCardForm = ({ deckId, onClose }: UseAddCardFormArgs) => {
       if (error instanceof Error) {
         setTranslateError(error.message);
       } else {
-        setTranslateError('Translation failed');
+        setTranslateError(t('errors.translationFailed'));
       }
     } finally {
       setIsTranslating(false);
@@ -95,7 +87,7 @@ export const useAddCardForm = ({ deckId, onClose }: UseAddCardFormArgs) => {
         cooldownTimerRef.current = null;
       }, 1500);
     }
-  }, [isCooldown, word]);
+  }, [isCooldown, t, word]);
 
   const handleSubmit = useCallback(() => {
     setHasSubmitted(true);

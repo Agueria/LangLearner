@@ -34,6 +34,26 @@ yarn-error.*
 .env
 .env*.local
 
+# Claude
+.claude/
+CLAUDE.md
+.claudeignore
+
+# AI/local assistant tooling
+.codex/
+.cursor/
+.continue/
+.windsurf/
+.aider*
+.mcp/
+.playwright-mcp/
+
+# local workspace/vault references
+*.code-workspace
+myVault/
+obsidian/
+.obsidian/
+
 # typescript
 *.tsbuildinfo
 

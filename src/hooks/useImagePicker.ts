@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import i18n from '../localization/i18n';
 
 type UseImagePickerResult = {
   pickImage: () => Promise<string | null>;
@@ -14,8 +15,8 @@ export const useImagePicker = (): UseImagePickerResult => {
 
       if (!permissionResult.granted) {
         Alert.alert(
-          'Permission needed',
-          'Please allow photo access to choose a cover photo.'
+          i18n.t('errors.permissionTitle'),
+          i18n.t('errors.permissionMessage')
         );
         return null;
       }
@@ -32,15 +33,15 @@ export const useImagePicker = (): UseImagePickerResult => {
       const asset = result.assets?.[0];
 
       if (!asset?.uri) {
-        Alert.alert('Image picker error', 'No image was selected.');
+        Alert.alert(i18n.t('errors.imagePickerTitle'), i18n.t('errors.noImage'));
         return null;
       }
 
       return asset.uri;
     } catch (error) {
       Alert.alert(
-        'Image picker error',
-        'Something went wrong while selecting an image.'
+        i18n.t('errors.imagePickerTitle'),
+        i18n.t('errors.imagePicker')
       );
       return null;
     }

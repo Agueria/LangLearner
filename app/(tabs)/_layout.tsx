@@ -1,7 +1,10 @@
 // Tabs layout for the main sections of the app.
 import { Tabs } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 export default function TabsLayout() {
+  const { t } = useTranslation();
+
   return (
     <Tabs
       screenOptions={{
@@ -11,19 +14,19 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('tabs.home'),
         }}
       />
       <Tabs.Screen
         name="decks"
         options={{
-          title: 'Decks',
+          title: t('tabs.decks'),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('tabs.profile'),
         }}
       />
     </Tabs>

@@ -2,17 +2,11 @@
 import { useCallback, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInUp, ZoomIn } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../src/constants';
-import { useDecks } from '../../src/hooks';
-
-const parseCount = (value: string | string[] | undefined): number => {
-  if (typeof value !== 'string') {
-    return 0;
-  }
-
-  const parsed = Number.parseInt(value, 10);
-  return Number.isNaN(parsed) ? 0 : parsed;
-};
+import { useDecks, useThemeColors } from '../../src/hooks';
+import { calculateQuizPercentage, parseResultCount } from '../../src/utils/quizResult';
 
 const styles = StyleSheet.create({
   button: {
@@ -93,6 +87,8 @@ const styles = StyleSheet.create({
 
 export default function QuizResultScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const colors = useThemeColors();
   const { correct, deckId: deckIdParam, incorrect, total } =
     useLocalSearchParams<{
       correct?: string;
@@ -101,11 +97,10 @@ export default function QuizResultScreen() {
       total?: string;
     }>();
   const deckId = typeof deckIdParam === 'string' ? deckIdParam : '';
-  const correctCount = parseCount(correct);
-  const incorrectCount = parseCount(incorrect);
-  const totalCount = parseCount(total);
-  const percentage =
-    totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+  const correctCount = parseResultCount(correct);
+  const incorrectCount = parseResultCount(incorrect);
+  const totalCount = parseResultCount(total);
+  const percentage = calculateQuizPercentage(correctCount, totalCount);
   const { decks } = useDecks();
   const deck = useMemo(
     () => decks.find((item) => item.id === deckId),
@@ -121,30 +116,50 @@ export default function QuizResultScreen() {
   }, [deckId, router]);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.resultCard}>
-        <Text style={styles.title}>Quiz Complete</Text>
-        <Text style={styles.deckTitle}>{deck?.title ?? 'Deck'}</Text>
-        <Text style={styles.score}>{percentage}%</Text>
-        <Text style={styles.statLabel}>Remembered</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Animated.View
+        entering={FadeInUp.duration(320)}
+        style={[
+          styles.resultCard,
+          { backgroundColor: colors.surface, shadowColor: colors.shadow },
+        ]}
+      >
+        <Text style={[styles.title, { color: colors.text }]}>
+          {t('quiz.complete')}
+        </Text>
+        <Text style={[styles.deckTitle, { color: colors.subtleText }]}>
+          {deck?.title ?? t('decks.deck')}
+        </Text>
+        <Animated.Text entering={ZoomIn.delay(120)} style={styles.score}>
+          {percentage}%
+        </Animated.Text>
+        <Text style={[styles.statLabel, { color: colors.mutedText }]}>
+          {t('quiz.remembered')}
+        </Text>
         <View style={styles.stats}>
-          <Text style={styles.statText}>Known: {correctCount}</Text>
-          <Text style={styles.statText}>Practice: {incorrectCount}</Text>
-          <Text style={styles.statText}>Total: {totalCount}</Text>
+          <Text style={[styles.statText, { color: colors.subtleText }]}>
+            {t('quiz.known')}: {correctCount}
+          </Text>
+          <Text style={[styles.statText, { color: colors.subtleText }]}>
+            {t('quiz.practice')}: {incorrectCount}
+          </Text>
+          <Text style={[styles.statText, { color: colors.subtleText }]}>
+            {t('quiz.total')}: {totalCount}
+          </Text>
         </View>
         <Pressable
           style={[styles.button, styles.primaryButton]}
           onPress={handleStudyAgain}
         >
-          <Text style={styles.buttonText}>Study Again</Text>
+          <Text style={styles.buttonText}>{t('quiz.studyAgain')}</Text>
         </Pressable>
         <Pressable
           style={[styles.button, styles.secondaryButton]}
           onPress={handleBackToDeck}
         >
-          <Text style={styles.buttonText}>Back to Deck</Text>
+          <Text style={styles.buttonText}>{t('actions.backToDeck')}</Text>
         </Pressable>
-      </View>
+      </Animated.View>
     </View>
   );
 }

@@ -10,9 +10,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { modalStyles } from './modalStyles';
 import { AddCardTranslateSection } from './AddCardTranslateSection';
-import { useAddCardForm } from '../hooks/useAddCardForm';
+import { useAddCardForm, useThemeColors } from '../hooks';
 
 type AddCardModalProps = {
   visible: boolean;
@@ -33,6 +34,8 @@ export function AddCardModal({
   deckId,
   onClose,
 }: AddCardModalProps) {
+  const { t } = useTranslation();
+  const colors = useThemeColors();
   const {
     word,
     setWord,
@@ -62,17 +65,25 @@ export function AddCardModal({
       <Pressable style={modalStyles.backdrop} onPress={onClose} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={modalStyles.sheet}
+        style={[modalStyles.sheet, { backgroundColor: colors.surface }]}
       >
-        <Text style={modalStyles.title}>Add Card</Text>
+        <Text style={[modalStyles.title, { color: colors.text }]}>
+          {t('cards.addCard')}
+        </Text>
         <View style={modalStyles.fieldGroup}>
-          <Text style={modalStyles.label}>Word *</Text>
+          <Text style={[modalStyles.label, { color: colors.text }]}>
+            {t('cards.wordLabel')}
+          </Text>
           <TextInput
             value={word}
             onChangeText={setWord}
-            placeholder="e.g. hello"
+            placeholder={t('cards.wordPlaceholder')}
             maxLength={100}
-            style={modalStyles.input}
+            style={[
+              modalStyles.input,
+              { borderColor: colors.borderLight, color: colors.text },
+            ]}
+            placeholderTextColor={colors.mutedText}
             editable={!isTranslating}
           />
           {hasSubmitted && errors.word && (
@@ -94,14 +105,16 @@ export function AddCardModal({
             onPress={onClose}
             disabled={isTranslating}
           >
-            <Text style={modalStyles.cancelText}>Cancel</Text>
+            <Text style={[modalStyles.cancelText, { color: colors.subtleText }]}>
+              {t('actions.cancel')}
+            </Text>
           </Pressable>
           <Pressable
             style={modalStyles.submitButton}
             onPress={handleSubmit}
             disabled={isTranslating || isCooldown}
           >
-            <Text style={modalStyles.submitText}>Add</Text>
+            <Text style={modalStyles.submitText}>{t('actions.add')}</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>

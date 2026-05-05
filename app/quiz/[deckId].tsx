@@ -1,9 +1,31 @@
 // Quiz screen: studies cards from a selected deck and tracks the score.
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../src/constants';
-import { useCards, useDecks, useQuiz, type QuizAnswer } from '../../src/hooks';
+import {
+  useCards,
+  useDecks,
+  useQuiz,
+  useThemeColors,
+  type QuizAnswer,
+} from '../../src/hooks';
+import {
+  playCorrectHaptic,
+  playIncorrectHaptic,
+  playLightHaptic,
+} from '../../src/services';
 
 const styles = StyleSheet.create({
   actionButton: {
@@ -48,6 +70,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
   },
+  cardFace: {
+    backfaceVisibility: 'hidden',
+  },
   container: {
     backgroundColor: COLORS.background,
     flex: 1,
@@ -88,6 +113,21 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: 14,
   },
+  overlayLabel: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  practiceBadge: {
+    backgroundColor: COLORS.danger,
+    borderRadius: 999,
+    left: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    position: 'absolute',
+    top: 20,
+    zIndex: 2,
+  },
   primaryButton: {
     alignItems: 'center',
     backgroundColor: COLORS.primary,
@@ -120,6 +160,22 @@ const styles = StyleSheet.create({
   successButton: {
     backgroundColor: COLORS.slate,
   },
+  swipeHint: {
+    color: COLORS.mutedText,
+    fontSize: 13,
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  swipeKnownBadge: {
+    backgroundColor: COLORS.slate,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    position: 'absolute',
+    right: 20,
+    top: 20,
+    zIndex: 2,
+  },
   word: {
     color: COLORS.text,
     fontSize: 34,
@@ -130,6 +186,8 @@ const styles = StyleSheet.create({
 
 export default function QuizScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const colors = useThemeColors();
   const { deckId: deckIdParam } = useLocalSearchParams<{ deckId: string }>();
   const deckId = typeof deckIdParam === 'string' ? deckIdParam : '';
   const { decks } = useDecks();
@@ -151,6 +209,9 @@ export default function QuizScreen() {
     answerCard,
     showAnswer,
   } = useQuiz(deckCards);
+  const flipProgress = useSharedValue(0);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
 
   const handleBackToDeck = useCallback(() => {
     router.push(`/deck/${deckId}`);
@@ -158,6 +219,11 @@ export default function QuizScreen() {
 
   const handleAnswer = useCallback(
     (answer: QuizAnswer) => {
+      if (answer === 'correct') {
+        playCorrectHaptic().catch(() => undefined);
+      } else {
+        playIncorrectHaptic().catch(() => undefined);
+      }
       const result = answerCard(answer);
 
       if (result.isComplete) {
@@ -175,65 +241,191 @@ export default function QuizScreen() {
     [answerCard, deckId, router]
   );
 
+  const handleShowAnswer = useCallback(() => {
+    playLightHaptic().catch(() => undefined);
+    showAnswer();
+  }, [showAnswer]);
+
+  useEffect(() => {
+    flipProgress.value = withTiming(isAnswerVisible ? 1 : 0, {
+      duration: 260,
+    });
+  }, [flipProgress, isAnswerVisible]);
+
+  useEffect(() => {
+    translateX.value = withSpring(0);
+    translateY.value = withSpring(0);
+  }, [currentCard?.id, translateX, translateY]);
+
+  const cardAnimatedStyle = useAnimatedStyle(() => {
+    const rotate = interpolate(
+      translateX.value,
+      [-180, 0, 180],
+      [-10, 0, 10],
+      Extrapolation.CLAMP
+    );
+
+    return {
+      opacity: interpolate(
+        Math.abs(translateX.value),
+        [0, 220],
+        [1, 0.86],
+        Extrapolation.CLAMP
+      ),
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { rotate: `${rotate}deg` },
+      ],
+    };
+  });
+
+  const faceAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        rotateY: `${interpolate(
+          flipProgress.value,
+          [0, 1],
+          [0, 180]
+        )}deg`,
+      },
+    ],
+  }));
+
+  const swipeGesture = Gesture.Pan()
+    .enabled(isAnswerVisible)
+    .onUpdate((event) => {
+      translateX.value = event.translationX;
+      translateY.value = event.translationY * 0.2;
+    })
+    .onEnd((event) => {
+      if (event.translationX > 90) {
+        translateX.value = withTiming(360, { duration: 180 });
+        runOnJS(handleAnswer)('correct');
+        return;
+      }
+
+      if (event.translationX < -90) {
+        translateX.value = withTiming(-360, { duration: 180 });
+        runOnJS(handleAnswer)('incorrect');
+        return;
+      }
+
+      translateX.value = withSpring(0);
+      translateY.value = withSpring(0);
+    });
+
   if (!deck) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Pressable style={styles.backButton} onPress={handleBackToDeck}>
-          <Text style={styles.backText}>Back to Deck</Text>
+          <Text style={[styles.backText, { color: colors.primary }]}>
+            {t('actions.backToDeck')}
+          </Text>
         </Pressable>
-        <Text style={styles.emptyText}>Deck not found.</Text>
+        <Text style={[styles.emptyText, { color: colors.mutedText }]}>
+          {t('decks.deckNotFound')}
+        </Text>
       </View>
     );
   }
 
   if (!currentCard) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Pressable style={styles.backButton} onPress={handleBackToDeck}>
-          <Text style={styles.backText}>Back to Deck</Text>
+          <Text style={[styles.backText, { color: colors.primary }]}>
+            {t('actions.backToDeck')}
+          </Text>
         </Pressable>
-        <Text style={styles.deckTitle}>{deck.title}</Text>
-        <Text style={styles.emptyText}>
-          Add at least one card before starting a quiz.
+        <Text style={[styles.deckTitle, { color: colors.text }]}>
+          {deck.title}
+        </Text>
+        <Text style={[styles.emptyText, { color: colors.mutedText }]}>
+          {t('quiz.deckRequired')}
         </Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Pressable style={styles.backButton} onPress={handleBackToDeck}>
-        <Text style={styles.backText}>Back to Deck</Text>
+        <Text style={[styles.backText, { color: colors.primary }]}>
+          {t('actions.backToDeck')}
+        </Text>
       </Pressable>
-      <Text style={styles.deckTitle}>{deck.title}</Text>
-      <Text style={styles.progress}>{progressLabel}</Text>
+      <Text style={[styles.deckTitle, { color: colors.text }]}>
+        {deck.title}
+      </Text>
+      <Text style={[styles.progress, { color: colors.mutedText }]}>
+        {t('quiz.progress', {
+          current: progressLabel.current,
+          total: progressLabel.total,
+        })}
+      </Text>
       <View style={styles.scoreRow}>
-        <Text style={styles.scoreText}>Known: {correctCount}</Text>
-        <Text style={styles.scoreText}>Practice: {incorrectCount}</Text>
+        <Text style={[styles.scoreText, { color: colors.subtleText }]}>
+          {t('quiz.known')}: {correctCount}
+        </Text>
+        <Text style={[styles.scoreText, { color: colors.subtleText }]}>
+          {t('quiz.practice')}: {incorrectCount}
+        </Text>
       </View>
-      <View style={styles.card}>
-        <Text style={styles.label}>Word</Text>
-        <Text style={styles.word}>{currentCard.word}</Text>
-        {isAnswerVisible ? (
-          <>
-            <Text style={styles.label}>Meaning</Text>
-            <Text style={styles.meaning}>{currentCard.meaning}</Text>
-          </>
-        ) : (
-          <Text style={styles.mutedMeaning}>
-            Try to remember the meaning before revealing the answer.
-          </Text>
-        )}
-        <Pressable
-          style={styles.primaryButton}
-          onPress={showAnswer}
-          disabled={isAnswerVisible}
+      <GestureDetector gesture={swipeGesture}>
+        <Animated.View
+          style={[
+            styles.card,
+            cardAnimatedStyle,
+            { backgroundColor: colors.surface, shadowColor: colors.shadow },
+          ]}
         >
-          <Text style={styles.primaryButtonText}>
-            {isAnswerVisible ? 'Answer shown' : 'Show Answer'}
-          </Text>
-        </Pressable>
-      </View>
+          {isAnswerVisible && (
+            <>
+              <View style={styles.practiceBadge}>
+                <Text style={styles.overlayLabel}>{t('quiz.practice')}</Text>
+              </View>
+              <View style={styles.swipeKnownBadge}>
+                <Text style={styles.overlayLabel}>{t('quiz.known')}</Text>
+              </View>
+            </>
+          )}
+          <Animated.View style={[styles.cardFace, faceAnimatedStyle]}>
+            <Text style={[styles.label, { color: colors.mutedTextAlt }]}>
+              {t('quiz.word')}
+            </Text>
+            <Text style={[styles.word, { color: colors.text }]}>
+              {currentCard.word}
+            </Text>
+            {isAnswerVisible ? (
+              <>
+                <Text style={[styles.label, { color: colors.mutedTextAlt }]}>
+                  {t('quiz.meaning')}
+                </Text>
+                <Text style={[styles.meaning, { color: colors.text }]}>
+                  {currentCard.meaning}
+                </Text>
+                <Text style={[styles.swipeHint, { color: colors.mutedText }]}>
+                  {t('quiz.swipeHint')}
+                </Text>
+              </>
+            ) : (
+              <Text style={[styles.mutedMeaning, { color: colors.subtleText }]}>
+                {t('quiz.flipHint')}
+              </Text>
+            )}
+            <Pressable
+              style={styles.primaryButton}
+              onPress={handleShowAnswer}
+              disabled={isAnswerVisible}
+            >
+              <Text style={styles.primaryButtonText}>
+                {isAnswerVisible ? t('quiz.answerShown') : t('quiz.showAnswer')}
+              </Text>
+            </Pressable>
+          </Animated.View>
+        </Animated.View>
+      </GestureDetector>
       <View style={styles.actions}>
         <Pressable
           style={[
@@ -244,7 +436,7 @@ export default function QuizScreen() {
           onPress={() => handleAnswer('incorrect')}
           disabled={!isAnswerVisible}
         >
-          <Text style={styles.actionLabel}>Need Practice</Text>
+          <Text style={styles.actionLabel}>{t('quiz.needPractice')}</Text>
         </Pressable>
         <Pressable
           style={[
@@ -255,7 +447,7 @@ export default function QuizScreen() {
           onPress={() => handleAnswer('correct')}
           disabled={!isAnswerVisible}
         >
-          <Text style={styles.actionLabel}>I Knew It</Text>
+          <Text style={styles.actionLabel}>{t('quiz.known')}</Text>
         </Pressable>
       </View>
     </View>

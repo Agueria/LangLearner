@@ -10,19 +10,16 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS, type Card } from '../constants';
-import { useCards } from '../hooks';
+import { useCards, useThemeColors } from '../hooks';
+import { validateCardForm, type CardFormErrors } from '../utils/validation';
 import { modalStyles } from './modalStyles';
 
 type EditCardModalProps = {
   visible: boolean;
   card: Card | null;
   onClose: () => void;
-};
-
-type FormErrors = {
-  word?: string;
-  meaning?: string;
 };
 
 const styles = StyleSheet.create({
@@ -51,9 +48,11 @@ export function EditCardModal({
   onClose,
 }: EditCardModalProps) {
   const { updateCard, removeCard } = useCards();
+  const { t } = useTranslation();
+  const colors = useThemeColors();
   const [word, setWord] = useState('');
   const [meaning, setMeaning] = useState('');
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState<CardFormErrors>({});
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const resetForm = useCallback(() => {
@@ -74,23 +73,17 @@ export function EditCardModal({
     }
   }, [card, resetForm, visible]);
 
-  const validate = useCallback((): FormErrors => {
-    const nextErrors: FormErrors = {};
-    const trimmedWord = word.trim();
-    const trimmedMeaning = meaning.trim();
-
-    if (trimmedWord.length === 0) {
-      nextErrors.word = 'Word is required.';
-    } else if (trimmedWord.length > 100) {
-      nextErrors.word = 'Word must be 100 characters or fewer.';
-    }
-
-    if (trimmedMeaning.length === 0) {
-      nextErrors.meaning = 'Meaning is required.';
-    }
-
-    return nextErrors;
-  }, [meaning, word]);
+  const validate = useCallback(
+    () =>
+      validateCardForm(word, meaning, {
+        meaningRequired: t('errors.meaningRequired'),
+        titleRequired: t('errors.titleRequired'),
+        titleTooLong: t('errors.titleTooLong'),
+        wordRequired: t('errors.wordRequired'),
+        wordTooLong: t('errors.wordTooLong'),
+      }),
+    [meaning, t, word]
+  );
 
   const handleSubmit = useCallback(() => {
     setHasSubmitted(true);
@@ -129,29 +122,43 @@ export function EditCardModal({
       <Pressable style={modalStyles.backdrop} onPress={onClose} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={modalStyles.sheet}
+        style={[modalStyles.sheet, { backgroundColor: colors.surface }]}
       >
-        <Text style={modalStyles.title}>Edit Card</Text>
+        <Text style={[modalStyles.title, { color: colors.text }]}>
+          {t('cards.editCard')}
+        </Text>
         <View style={modalStyles.fieldGroup}>
-          <Text style={modalStyles.label}>Word *</Text>
+          <Text style={[modalStyles.label, { color: colors.text }]}>
+            {t('cards.wordLabel')}
+          </Text>
           <TextInput
             value={word}
             onChangeText={setWord}
-            placeholder="e.g. hello"
+            placeholder={t('cards.wordPlaceholder')}
             maxLength={100}
-            style={modalStyles.input}
+            style={[
+              modalStyles.input,
+              { borderColor: colors.borderLight, color: colors.text },
+            ]}
+            placeholderTextColor={colors.mutedText}
           />
           {hasSubmitted && errors.word && (
             <Text style={modalStyles.errorText}>{errors.word}</Text>
           )}
         </View>
         <View style={modalStyles.fieldGroup}>
-          <Text style={modalStyles.label}>Meaning *</Text>
+          <Text style={[modalStyles.label, { color: colors.text }]}>
+            {t('cards.meaningLabel')}
+          </Text>
           <TextInput
             value={meaning}
             onChangeText={setMeaning}
-            placeholder="e.g. merhaba"
-            style={modalStyles.input}
+            placeholder={t('cards.meaningPlaceholder')}
+            style={[
+              modalStyles.input,
+              { borderColor: colors.borderLight, color: colors.text },
+            ]}
+            placeholderTextColor={colors.mutedText}
           />
           {hasSubmitted && errors.meaning && (
             <Text style={modalStyles.errorText}>{errors.meaning}</Text>
@@ -159,13 +166,15 @@ export function EditCardModal({
         </View>
         <View style={[modalStyles.actions, styles.actions]}>
           <Pressable style={styles.deleteButton} onPress={handleDelete}>
-            <Text style={styles.deleteText}>Delete</Text>
+            <Text style={styles.deleteText}>{t('actions.delete')}</Text>
           </Pressable>
           <Pressable style={modalStyles.cancelButton} onPress={onClose}>
-            <Text style={modalStyles.cancelText}>Cancel</Text>
+            <Text style={[modalStyles.cancelText, { color: colors.subtleText }]}>
+              {t('actions.cancel')}
+            </Text>
           </Pressable>
           <Pressable style={modalStyles.submitButton} onPress={handleSubmit}>
-            <Text style={modalStyles.submitText}>Save</Text>
+            <Text style={modalStyles.submitText}>{t('actions.save')}</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>

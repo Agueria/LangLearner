@@ -5,3 +5,5 @@ export * from './useNetworkStatus';
 export * from './useAddCardForm';
 export * from './useImagePicker';
 export * from './useQuiz';
+export * from './useSettings';
+export * from './useThemeColors';

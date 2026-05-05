@@ -1,6 +1,7 @@
 // Single row for a card in the deck detail list.
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { COLORS, type Card } from '../constants';
+import { useThemeColors } from '../hooks';
 
 type CardRowProps = {
   card: Card;
@@ -27,10 +28,17 @@ const styles = StyleSheet.create({
 });
 
 export function CardRow({ card, onPress }: CardRowProps) {
+  const colors = useThemeColors();
+
   return (
-    <Pressable style={styles.cardRow} onPress={onPress}>
-      <Text style={styles.cardWord}>{card.word}</Text>
-      <Text style={styles.cardMeaning}>{card.meaning}</Text>
+    <Pressable
+      style={[styles.cardRow, { backgroundColor: colors.surface }]}
+      onPress={onPress}
+    >
+      <Text style={[styles.cardWord, { color: colors.text }]}>{card.word}</Text>
+      <Text style={[styles.cardMeaning, { color: colors.subtleText }]}>
+        {card.meaning}
+      </Text>
     </Pressable>
   );
 }

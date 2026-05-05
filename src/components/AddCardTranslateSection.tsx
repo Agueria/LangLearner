@@ -7,7 +7,9 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../constants';
+import { useThemeColors } from '../hooks';
 import { modalStyles } from './modalStyles';
 
 type AddCardTranslateSectionProps = {
@@ -49,27 +51,41 @@ export function AddCardTranslateSection({
   isTranslating,
   isCooldown,
 }: AddCardTranslateSectionProps) {
+  const { t } = useTranslation();
+  const colors = useThemeColors();
+
   return (
     <View style={modalStyles.fieldGroup}>
       <View style={styles.row}>
-        <Text style={modalStyles.label}>Meaning *</Text>
+        <Text style={[modalStyles.label, { color: colors.text }]}>
+          {t('cards.meaningLabel')}
+        </Text>
         <Pressable
-          style={styles.translateButton}
+          style={[
+            styles.translateButton,
+            { backgroundColor: colors.secondarySurface },
+          ]}
           onPress={onTranslate}
           disabled={isTranslating || isCooldown}
         >
           {isTranslating ? (
             <ActivityIndicator size="small" color={COLORS.primary} />
           ) : (
-            <Text style={styles.translateText}>Auto-translate</Text>
+            <Text style={[styles.translateText, { color: colors.primary }]}>
+              {t('actions.autoTranslate')}
+            </Text>
           )}
         </Pressable>
       </View>
       <TextInput
         value={meaning}
         onChangeText={onMeaningChange}
-        placeholder="e.g. merhaba"
-        style={modalStyles.input}
+        placeholder={t('cards.meaningPlaceholder')}
+        style={[
+          modalStyles.input,
+          { borderColor: colors.borderLight, color: colors.text },
+        ]}
+        placeholderTextColor={colors.mutedText}
         editable={!isTranslating}
       />
       {translateError.length > 0 && (
