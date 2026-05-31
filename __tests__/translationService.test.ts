@@ -25,6 +25,9 @@ describe('translation service', () => {
     });
 
     await expect(translateWord('hello', 'TR')).resolves.toBe('merhaba');
+    expect(mockedFetch.mock.calls[0][0]).toContain(
+      'models/gemini-2.5-flash:generateContent'
+    );
   });
 
   it('maps rate limit responses to a friendly message', async () => {

@@ -23,7 +23,10 @@ type GeminiResponse = {
   candidates?: GeminiCandidate[];
 };
 
-const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+// Gemini 2.0 Flash yeni API key'lerde "model unavailable" donebildigi icin
+// aktif model listesindeki stable Flash modelini kullaniyoruz.
+const GEMINI_MODEL = 'gemini-2.5-flash';
+const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
 export const mapTranslationError = (error: unknown): Error => {
   // Bilinen API hatalarini koruyoruz, beklenmeyen her seyi kullanicinin
