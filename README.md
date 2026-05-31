@@ -18,6 +18,16 @@ LangLearner is an Expo + React Native mobile app for building vocabulary decks, 
 - Switch the app language between English and Turkish.
 - Switch between light and dark themes from settings.
 
+## Screenshots
+
+| Mobile login | Mobile register |
+| --- | --- |
+| ![Mobile login](assets/screenshots/login-mobile.png) | ![Mobile register](assets/screenshots/register-mobile.png) |
+
+| Desktop login | Desktop register |
+| --- | --- |
+| ![Desktop login](assets/screenshots/login-desktop.png) | ![Desktop register](assets/screenshots/register-desktop.png) |
+
 ## Tech Stack
 
 - Expo SDK 54
@@ -111,6 +121,10 @@ Build an Android preview APK:
 npx eas-cli build --platform android --profile preview
 ```
 
+Current EAS status: `eas.json` has a preview APK profile, but this machine is
+not logged into an Expo account. Run `npx eas-cli login` or set `EXPO_TOKEN`
+before starting the remote preview build.
+
 ## Quality Checks
 
 ```sh
@@ -123,8 +137,9 @@ Current local verification:
 
 - `npm run lint` passes.
 - `npm run typecheck` passes.
-- `npm test -- --runInBand` passes with 27 tests.
+- `npm test -- --runInBand` passes with 46 tests.
 - `npx expo-doctor` passes all checks.
+- `npx expo export --platform web --output-dir /tmp/langlearner-export-test` passes.
 
 ## Demo Flow
 
@@ -171,6 +186,7 @@ Run these checks before presenting or submitting:
 - `src/localization/`: English and Turkish i18n resources.
 - `src/utils/`: testable validation and quiz result helpers.
 - `__tests__/`: reducer, validation, quiz result, notification, translation, auth, and error boundary tests.
+- `.github/workflows/ci.yml`: GitHub Actions CI for install, lint, typecheck, and Jest.
 
 ## Notes
 
