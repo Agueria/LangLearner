@@ -137,7 +137,7 @@ Current local verification:
 
 - `npm run lint` passes.
 - `npm run typecheck` passes.
-- `npm test -- --runInBand` passes with 46 tests.
+- `npm test -- --runInBand` passes with 50 tests.
 - `npx expo-doctor` passes all checks.
 - `npx expo export --platform web --output-dir /tmp/langlearner-export-test` passes.
 
