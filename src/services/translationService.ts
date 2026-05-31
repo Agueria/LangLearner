@@ -23,6 +23,23 @@ type GeminiResponse = {
 
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
+export const mapTranslationError = (error: unknown): Error => {
+  // Preserve known API errors and normalize everything else into a user-facing network error.
+  if (error instanceof Error) {
+    if (error.message === 'Too many requests, please wait') {
+      return error;
+    }
+    if (error.message.startsWith('Translation failed')) {
+      return error;
+    }
+    if (error.message.startsWith('Empty translation response')) {
+      return error;
+    }
+  }
+
+  return new Error('Network error, please check your connection');
+};
+
 export const translateWord = async (
   word: string,
   targetLang: string
@@ -77,17 +94,6 @@ export const translateWord = async (
 
     return text;
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === 'Too many requests, please wait') {
-        throw error;
-      }
-      if (error.message.startsWith('Translation failed')) {
-        throw error;
-      }
-      if (error.message.startsWith('Empty translation response')) {
-        throw error;
-      }
-    }
-    throw new Error('Network error, please check your connection');
+    throw mapTranslationError(error);
   }
 };

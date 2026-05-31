@@ -1,4 +1,5 @@
 // Card UI for a single deck in the list.
+import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS, type Deck } from '../constants';
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export function DeckCard({ deck, onPress }: DeckCardProps) {
+export const DeckCard = memo(({ deck, onPress }: DeckCardProps) => {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const initial = deck.title.trim().charAt(0).toUpperCase();
@@ -112,4 +113,4 @@ export function DeckCard({ deck, onPress }: DeckCardProps) {
       </View>
     </Pressable>
   );
-}
+});

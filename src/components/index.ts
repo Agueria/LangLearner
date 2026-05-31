@@ -1,4 +1,5 @@
 // Central exports for reusable UI components.
+export * from './ErrorBoundary';
 export * from './OfflineBanner';
 export * from './DeckCard';
 export * from './CreateDeckModal';

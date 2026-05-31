@@ -87,6 +87,7 @@ export default function ProfileScreen() {
     theme,
   } = useSettings();
   const colors = useThemeColors();
+  const [isReminderUpdating, setIsReminderUpdating] = useState(false);
   const [reminderMessage, setReminderMessage] = useState('');
 
   const handleLanguageChange = useCallback(
@@ -107,28 +108,37 @@ export default function ProfileScreen() {
 
   const handleReminderToggle = useCallback(
     async (enabled: boolean) => {
-      playLightHaptic().catch(() => undefined);
-
-      if (!enabled) {
-        await cancelDailyReminder();
-        setDailyReminderEnabled(false);
-        setReminderMessage(t('notifications.disabled'));
+      if (isReminderUpdating) {
         return;
       }
 
-      const wasScheduled = await scheduleDailyReminder({
-        body: t('notifications.body'),
-        title: t('notifications.title'),
-      });
+      playLightHaptic().catch(() => undefined);
+      setIsReminderUpdating(true);
 
-      setDailyReminderEnabled(wasScheduled);
-      setReminderMessage(
-        wasScheduled
-          ? t('notifications.scheduled')
-          : t('notifications.permissionDenied')
-      );
+      try {
+        if (!enabled) {
+          await cancelDailyReminder();
+          setDailyReminderEnabled(false);
+          setReminderMessage(t('notifications.disabled'));
+          return;
+        }
+
+        const wasScheduled = await scheduleDailyReminder({
+          body: t('notifications.body'),
+          title: t('notifications.title'),
+        });
+
+        setDailyReminderEnabled(wasScheduled);
+        setReminderMessage(
+          wasScheduled
+            ? t('notifications.scheduled')
+            : t('notifications.permissionDenied')
+        );
+      } finally {
+        setIsReminderUpdating(false);
+      }
     },
-    [setDailyReminderEnabled, t]
+    [isReminderUpdating, setDailyReminderEnabled, t]
   );
 
   return (
@@ -240,6 +250,7 @@ export default function ProfileScreen() {
           <Switch
             value={dailyReminderEnabled}
             onValueChange={handleReminderToggle}
+            disabled={isReminderUpdating}
           />
         </View>
         {reminderMessage.length > 0 && (

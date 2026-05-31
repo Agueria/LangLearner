@@ -1,5 +1,5 @@
 // Decks tab: list decks and create new ones.
-import { useCallback, useLayoutEffect, useState } from 'react';
+import { memo, useCallback, useLayoutEffect, useState } from 'react';
 import { useNavigation, useRouter } from 'expo-router';
 import {
   Alert,
@@ -93,7 +93,11 @@ function EmptyDeckList() {
   );
 }
 
-function DeckListItem({ deck, onDelete, onPress }: DeckListItemProps) {
+const DeckListItem = memo(({
+  deck,
+  onDelete,
+  onPress,
+}: DeckListItemProps) => {
   const { t } = useTranslation();
   const handleDelete = useCallback(() => {
     onDelete(deck.id);
@@ -113,7 +117,7 @@ function DeckListItem({ deck, onDelete, onPress }: DeckListItemProps) {
       <DeckCard deck={deck} onPress={() => onPress(deck.id)} />
     </Swipeable>
   );
-}
+});
 
 export default function DecksScreen() {
   const navigation = useNavigation();
@@ -173,8 +177,12 @@ export default function DecksScreen() {
         data={decks}
         keyExtractor={(item) => item.id}
         contentContainerStyle={decks.length === 0 ? styles.emptyContainer : styles.listContainer}
+        initialNumToRender={8}
         renderItem={renderItem}
         ListEmptyComponent={EmptyDeckList}
+        maxToRenderPerBatch={8}
+        removeClippedSubviews
+        windowSize={7}
       />
     </View>
   );

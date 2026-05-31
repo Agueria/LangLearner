@@ -181,12 +181,16 @@ export default function DeckDetailScreen() {
         contentContainerStyle={
           deckCards.length === 0 ? styles.emptyContainer : styles.listContainer
         }
+        initialNumToRender={10}
         renderItem={renderItem}
         ListEmptyComponent={
           <Text style={[styles.emptyText, { color: colors.mutedText }]}>
             {t('decks.emptyCards')}
           </Text>
         }
+        maxToRenderPerBatch={10}
+        removeClippedSubviews
+        windowSize={7}
       />
       <View style={styles.footerActions}>
         <Pressable

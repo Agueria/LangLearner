@@ -1,4 +1,5 @@
 // Single row for a card in the deck detail list.
+import { memo } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { COLORS, type Card } from '../constants';
 import { useThemeColors } from '../hooks';
@@ -27,7 +28,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export function CardRow({ card, onPress }: CardRowProps) {
+export const CardRow = memo(({ card, onPress }: CardRowProps) => {
   const colors = useThemeColors();
 
   return (
@@ -41,4 +42,4 @@ export function CardRow({ card, onPress }: CardRowProps) {
       </Text>
     </Pressable>
   );
-}
+});

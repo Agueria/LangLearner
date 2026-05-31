@@ -5,7 +5,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { OfflineBanner } from '../src/components/OfflineBanner';
+import { ErrorBoundary, OfflineBanner } from '../src/components';
 import '../src/localization/i18n';
 import { persistor, store } from '../src/store/store';
 
@@ -32,13 +32,15 @@ export default function RootLayout() {
           </View>
         }
       >
-        <GestureHandlerRootView style={styles.container}>
-          {/* eslint-disable-next-line react/style-prop-object */}
-          <StatusBar style="auto" />
-          {/* Global banner for connectivity changes. */}
-          <OfflineBanner />
-          <Slot />
-        </GestureHandlerRootView>
+        <ErrorBoundary>
+          <GestureHandlerRootView style={styles.container}>
+            {/* eslint-disable-next-line react/style-prop-object */}
+            <StatusBar style="auto" />
+            {/* Global banner for connectivity changes. */}
+            <OfflineBanner />
+            <Slot />
+          </GestureHandlerRootView>
+        </ErrorBoundary>
       </PersistGate>
     </Provider>
   );

@@ -1,0 +1,52 @@
+import {
+  mapTranslationError,
+  translateWord,
+} from '../src/services/translationService';
+
+jest.mock('../src/constants/config', () => ({
+  GEMINI_API_KEY: 'test-api-key',
+}));
+
+const mockedFetch = jest.fn();
+
+describe('translation service', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    global.fetch = mockedFetch as unknown as typeof fetch;
+  });
+
+  it('returns the first Gemini candidate text', async () => {
+    mockedFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: ' merhaba ' }] } }],
+      }),
+      status: 200,
+    });
+
+    await expect(translateWord('hello', 'TR')).resolves.toBe('merhaba');
+  });
+
+  it('maps rate limit responses to a friendly message', async () => {
+    mockedFetch.mockResolvedValue({
+      ok: false,
+      status: 429,
+    });
+
+    await expect(translateWord('hello', 'TR')).rejects.toThrow(
+      'Too many requests, please wait'
+    );
+  });
+
+  it('preserves known translation errors', () => {
+    const error = new Error('Translation failed. Access denied for this API key.');
+
+    expect(mapTranslationError(error)).toBe(error);
+  });
+
+  it('maps unknown failures to a network error', () => {
+    expect(mapTranslationError(new Error('socket closed')).message).toBe(
+      'Network error, please check your connection'
+    );
+  });
+});
