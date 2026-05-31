@@ -8,6 +8,8 @@ import {
 
 const mockedSecureStore = jest.mocked(SecureStore);
 
+// Bu fixture gercek Firebase cevabinin uygulamada saklanan sade halidir:
+// tokenlar tokens altinda, public kullanici bilgisi user altinda tutulur.
 const session: AuthSession = {
   tokens: {
     expiresAt: 4102444800000,
@@ -28,6 +30,9 @@ describe('auth session service', () => {
   it('stores the auth session as JSON in SecureStore', async () => {
     await saveAuthSession(session);
 
+    // SecureStore yalnizca string sakladigi icin servis JSON serialize eder.
+    // Bu test tokenlarin Redux/AsyncStorage'a degil SecureStore'a gittigini de
+    // dolayli olarak garanti eder.
     expect(mockedSecureStore.setItemAsync).toHaveBeenCalledWith(
       'langlearner.auth.session',
       JSON.stringify(session)
@@ -47,6 +52,8 @@ describe('auth session service', () => {
   });
 
   it('deletes corrupt session JSON and returns null', async () => {
+    // Cihazda eski/bozulmus bir session kalirsa uygulama crash etmek yerine
+    // login ekranina donmeli. Bu senaryo o recovery davranisini kilitler.
     mockedSecureStore.getItemAsync.mockResolvedValue('{not-json');
 
     await expect(loadAuthSession()).resolves.toBeNull();

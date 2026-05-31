@@ -12,18 +12,24 @@ import {
 import type { AuthSession } from '../src/constants/types';
 
 jest.mock('../src/constants/config', () => ({
+  // Auth servisinin gercek network endpoint formatini test ediyoruz, ama
+  // test ortaminda gercek Firebase projesine gitmemek icin key/project mock.
   FIREBASE_API_KEY: 'firebase-key',
   FIREBASE_PROJECT_ID: 'firebase-project',
   isFirebaseConfigured: true,
 }));
 
 jest.mock('../src/services/authSessionService', () => ({
+  // Token saklama bu dosyanin sorumlulugu degil. Burada sadece Auth servisinin
+  // dogru anda save/clear cagirip cagirmadigini kontrol ediyoruz.
   clearAuthSession: jest.fn(),
   loadAuthSession: jest.fn(),
   saveAuthSession: jest.fn(),
 }));
 
 const responseWithCode = (message: string) =>
+  // Firebase REST hata cevabi { error: { message: "CODE" } } seklinde gelir.
+  // Helper bu formati tekrar tekrar yazmayi engeller.
   ({
     json: async () => ({ error: { message } }),
   }) as Response;
@@ -34,6 +40,8 @@ const mockedLoadAuthSession = jest.mocked(loadAuthSession);
 const mockedSaveAuthSession = jest.mocked(saveAuthSession);
 
 const storedSession: AuthSession = {
+  // expiresAt bilerek uzak gelecek olarak verildi. getValidAuthSession testi,
+  // hala gecerli session icin refresh endpoint'ine gitmedigimizi kanitlar.
   tokens: {
     expiresAt: 4102444800000,
     idToken: 'old-id-token',
@@ -51,6 +59,8 @@ describe('Firebase auth service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     global.fetch = mockedFetch as unknown as typeof fetch;
+    // Token expiry hesaplari Date.now'a bagli. Sabit zaman, testte beklenen
+    // expiresAt degerini deterministik yapar.
     dateNowSpy = jest.spyOn(Date, 'now').mockReturnValue(1000);
   });
 
@@ -71,6 +81,8 @@ describe('Firebase auth service', () => {
   });
 
   it('registers with trimmed email and stores the returned session', async () => {
+    // Firebase signUp cevabi expiresIn'i saniye string'i olarak verir. Servis
+    // bunu absolute timestamp'e cevirip SecureStore session'i olarak kaydeder.
     mockedFetch.mockResolvedValue({
       json: async () => ({
         email: 'student@example.com',
@@ -112,6 +124,8 @@ describe('Firebase auth service', () => {
       })
     );
     expect(mockedSaveAuthSession).toHaveBeenCalledWith(
+      // Token degerinin kaydedildigini kontrol ediyoruz; tam obje yukarida
+      // resolve expectation'inda zaten dogrulaniyor.
       expect.objectContaining({
         tokens: expect.objectContaining({ idToken: 'id-token' }),
       })
@@ -119,6 +133,8 @@ describe('Firebase auth service', () => {
   });
 
   it('refreshes an expired session and preserves the user email', async () => {
+    // securetoken endpoint'i email dondurmez; bu yuzden servis eski session'daki
+    // user.email bilgisini korumali ve sadece tokenlari yenilemelidir.
     mockedFetch.mockResolvedValue({
       json: async () => ({
         expires_in: '3600',
@@ -153,6 +169,8 @@ describe('Firebase auth service', () => {
   });
 
   it('clears the local session when refresh token is rejected', async () => {
+    // Refresh token gecersizse bozuk session'i cihazda tutmak kullaniciyi
+    // sonsuz hata dongusune sokar. Bu yuzden servis once clearAuthSession yapar.
     mockedFetch.mockResolvedValue({
       json: async () => ({ error: { message: 'TOKEN_EXPIRED' } }),
       ok: false,
@@ -167,6 +185,8 @@ describe('Firebase auth service', () => {
   it('returns a still-valid stored session without refreshing it', async () => {
     mockedLoadAuthSession.mockResolvedValue(storedSession);
 
+    // Token expiry safety window disindaysa network'e gitmeden mevcut session
+    // kullanilir. Bu, app acilisini hizlandirir ve gereksiz quota tuketmez.
     await expect(getValidAuthSession()).resolves.toBe(storedSession);
     expect(mockedFetch).not.toHaveBeenCalled();
   });

@@ -1,6 +1,8 @@
 name: CI
 
 on:
+  # Pull request'te calismasi, main'e merge etmeden once ayni yerel kalite
+  # kapilarinin GitHub tarafinda da gecmesini saglar.
   pull_request:
   push:
     branches:
@@ -17,10 +19,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
+          # Lokal gelistirme Node 22 ile dogrulandi; CI ayni major surumu
+          # kullanarak "bende calisiyor" farklarini azaltir.
           node-version: 22
           cache: npm
 
       - name: Install dependencies
+        # npm ci package-lock.json'a bire bir uyar. CI'da npm install yerine
+        # bunu kullanmak dependency sonucunu daha tekrar edilebilir yapar.
         run: npm ci
 
       - name: Lint
@@ -30,4 +36,6 @@ jobs:
         run: npm run typecheck
 
       - name: Test
+        # --runInBand Jest testlerini tek process'te kosturur. React Native
+        # mock'lari ve global fetch mock'lari icin CI'da daha deterministiktir.
         run: npm test -- --runInBand

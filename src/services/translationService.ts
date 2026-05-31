@@ -25,6 +25,8 @@ type GeminiResponse = {
 
 // Gemini 2.0 Flash yeni API key'lerde "model unavailable" donebildigi icin
 // aktif model listesindeki stable Flash modelini kullaniyoruz.
+// Model adi tek sabit olarak tutulur ki endpoint degisirse test ve servis
+// ayni davranisi kolayca takip edebilsin.
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
@@ -51,6 +53,8 @@ export const translateWord = async (
   targetLang: string
 ): Promise<string> => {
   if (!isGeminiConfigured) {
+    // Config import artik crash etmedigi icin eksik key hatasi burada,
+    // kullanicinin Auto-translate aksiyonuna en yakin yerde uretilir.
     throw new Error('Translation failed. Configure Gemini API key.');
   }
 
@@ -79,11 +83,16 @@ export const translateWord = async (
     if (!response.ok) {
       if (response.status === 400 || response.status === 401) {
         // API key veya request format sorunlari kullaniciya net soylenir.
+        // 401 ozellikle yanlis/iptal edilmis key durumunda gelir.
         throw new Error('Translation failed. Check your API key and request.');
       }
       if (response.status === 403) {
+        // 403 key dogru olsa bile proje/API izni veya quota politikasi
+        // nedeniyle erisim yoksa gelir; bu mesaj setup'a isaret eder.
         throw new Error('Translation failed. Access denied for this API key.');
       }
+      // Beklenmeyen server detaylarini aynen gostermiyoruz. Hem kullanici icin
+      // daha temiz, hem de dis servisten gelen teknik metni UI'a sizdirmiyor.
       throw new Error('Translation failed. Please try again later.');
     }
 

@@ -70,6 +70,8 @@ export const useAddCardForm = ({ deckId, onClose }: UseAddCardFormArgs) => {
   const handleTranslate = useCallback(async () => {
     const trimmedWord = word.trim();
     if (!isGeminiConfigured) {
+      // Config seviyesinde throw etmek yerine form seviyesinde uyari veriyoruz.
+      // Bu sayede uygulama acilir, sadece Gemini'ye bagli ozellik kapali kalir.
       setTranslateError(t('errors.geminiMissing'));
       return;
     }
@@ -140,6 +142,8 @@ export const useAddCardForm = ({ deckId, onClose }: UseAddCardFormArgs) => {
     isTranslating,
     isCooldown,
     translateError,
+    // UI component bu boolean'i kullanarak Auto-translate butonunu kapatir ve
+    // eksik .env mesajini gosterir. API key'in kendisi component'e verilmez.
     isGeminiConfigured,
     resetForm,
     handleTranslate,

@@ -13,6 +13,8 @@ export const mapStateToStatus = (state: NetInfoState): NetworkStatus => ({
   isConnected: Boolean(state.isConnected),
   // NetInfo ozellikle web/ilk acilis aninda isInternetReachable icin null
   // donebilir. Null "offline" degil "henuz bilinmiyor" anlamina gelir.
+  // Bu ayrim onemli: null'i false saysaydik app ilk acilista yanlis offline
+  // banner gosterir ve cloud sync gereksiz yere bekleyebilirdi.
   isInternetReachable: state.isInternetReachable !== false,
 });
 
@@ -27,6 +29,8 @@ export const useNetworkStatus = (): NetworkStatus => {
 
     const updateStatus = (state: NetInfoState) => {
       // Async fetch sonucu component kapandiktan sonra gelirse state yazmayalim.
+      // Bu guard, testlerde ve hizli route gecislerinde "unmounted component"
+      // state update uyarilarini engeller.
       if (!isMounted) {
         return;
       }

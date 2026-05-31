@@ -57,8 +57,13 @@ const integerField = (value: number): FirestoreValue => ({
 const extractId = (documentName: string) => {
   const [id = ''] = documentName.split('/').slice(-1);
   try {
+    // Firestore REST document name tam URL path'i olarak gelir ve id segmenti
+    // encode edilmis olabilir. "deck 1" gibi id'ler UI/Redux tarafinda encode
+    // karakterleriyle kalmasin diye hydrate ederken decode ediyoruz.
     return decodeURIComponent(id);
   } catch {
+    // Teorik olarak bozuk percent-encoding gelirse decodeURIComponent throw
+    // eder. Bu durumda sync'i tamamen bozmak yerine ham id ile devam ederiz.
     return id;
   }
 };

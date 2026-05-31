@@ -6,12 +6,16 @@ import {
 } from '../src/services/firestoreService';
 
 jest.mock('../src/constants/config', () => ({
+  // Firestore REST base URL project id ile kurulur. Testte gercek project id
+  // kullanmadan endpoint path'inin dogru uretilmesini kontrol ediyoruz.
   FIREBASE_PROJECT_ID: 'project-1',
 }));
 
 const mockedFetch = jest.fn();
 
 const session: AuthSession = {
+  // Bu session, Firebase Auth'tan gelen idToken'in Firestore security rules'ta
+  // request.auth.uid uretmek icin kullanildigi client durumunu temsil eder.
   tokens: {
     expiresAt: 4102444800000,
     idToken: 'id-token',
@@ -24,6 +28,8 @@ const session: AuthSession = {
 };
 
 const deck: Deck = {
+  // cardCount bilerek 99. fetchCloudVocabulary testinde Firestore'dan gelen
+  // stale sayi yerine kart listesinden 1 hesaplanmasini bekliyoruz.
   cardCount: 99,
   coverImage: undefined,
   createdAt: '2026-05-31T10:00:00.000Z',
@@ -41,6 +47,8 @@ const card: Card = {
 };
 
 const jsonResponse = (body: unknown, status = 200) => ({
+  // Minimal fetch Response mock'u. Servis sadece ok/status/json alanlarini
+  // kullandigi icin testlerde bu sade obje yeterli.
   json: async () => body,
   ok: status >= 200 && status < 300,
   status,
@@ -69,6 +77,8 @@ describe('firestore service', () => {
     );
 
     const requestBody = JSON.parse(mockedFetch.mock.calls[0][1].body as string);
+    // Firestore REST API normal JSON yerine typed wrapper ister. Bu assertion,
+    // stringValue/integerValue formatinin bozulmasini engeller.
     expect(requestBody).toEqual({
       fields: {
         cardCount: { integerValue: '99' },
@@ -81,6 +91,8 @@ describe('firestore service', () => {
   });
 
   it('fetches decks and cards, then recalculates deck card counts from cards', async () => {
+    // Ilk response deck collection, ikinci response o deck'in cards
+    // subcollection'idir. Servis Promise.all ile her deck icin kartlari okur.
     mockedFetch
       .mockResolvedValueOnce(
         jsonResponse({
@@ -93,6 +105,8 @@ describe('firestore service', () => {
                 description: { stringValue: deck.description },
                 title: { stringValue: deck.title },
               },
+              // REST API document name'i encode edilmis path segmentleriyle gelir.
+              // Servis hydrate ederken bunlari "deck 1" / "card 1" haline decode etmeli.
               name: 'projects/project-1/databases/(default)/documents/users/user-1/decks/deck%201',
             },
           ],
@@ -121,6 +135,8 @@ describe('firestore service', () => {
   });
 
   it('returns an empty vocabulary when the user has no cloud documents yet', async () => {
+    // Yeni kullanicinin Firestore'da henuz users/{uid}/decks path'i olmayabilir.
+    // 404 burada hata degil, bos vocabulary anlamina gelir.
     mockedFetch.mockResolvedValue(jsonResponse({}, 404));
 
     await expect(fetchCloudVocabulary(session)).resolves.toEqual({
@@ -135,12 +151,16 @@ describe('firestore service', () => {
     await deleteCloudCard(session, 'deck 1', 'card 1');
 
     expect(mockedFetch).toHaveBeenCalledWith(
+      // Bosluklu id'ler URL segmentinde encode edilmelidir; aksi halde REST
+      // path yanlis bolunur ve yanlis dokumana istek gidebilir.
       'https://firestore.googleapis.com/v1/projects/project-1/databases/(default)/documents/users/user-1/decks/deck%201/cards/card%201',
       expect.objectContaining({ method: 'DELETE' })
     );
   });
 
   it('throws a user-facing sync error when Firestore rejects a request', async () => {
+    // Firestore'dan gelen teknik hata metnini UI'a tasimiyoruz. Cloud sync
+    // ekrani tek, anlasilir bir mesaj gostersin diye servis generic hata atar.
     mockedFetch.mockResolvedValue(jsonResponse({ error: 'denied' }, 403));
 
     await expect(upsertCloudDeck(session, deck)).rejects.toThrow(

@@ -3,6 +3,9 @@ import '../src/localization/i18n';
 import { AddCardTranslateSection } from '../src/components/AddCardTranslateSection';
 
 jest.mock('../src/hooks', () => ({
+  // Component testinde Redux/theme provider kurmak yerine yalnizca bu
+  // componentin ihtiyaci olan renkleri sabitliyoruz. Testin odagi UI davranisi:
+  // Gemini yoksa buton kapali mi ve uyari gorunuyor mu?
   useThemeColors: () => ({
     borderLight: '#dddddd',
     mutedText: '#777777',
@@ -16,6 +19,8 @@ describe('AddCardTranslateSection', () => {
   it('disables auto-translate and shows a warning when Gemini is not configured', () => {
     const onTranslate = jest.fn();
 
+    // isGeminiConfigured=false, .env'de Gemini key yokken parent hook'un bu
+    // component'e verecegi durumu simule eder.
     render(
       <AddCardTranslateSection
         meaning=""
@@ -36,6 +41,8 @@ describe('AddCardTranslateSection', () => {
 
     fireEvent.press(screen.getByText('Auto-translate'));
 
+    // Disabled button'a basilsa bile translate callback'i calismamali; aksi
+    // halde eksik key ile gereksiz network istegi denenirdi.
     expect(onTranslate).not.toHaveBeenCalled();
   });
 });

@@ -22,6 +22,8 @@ type AddCardTranslateSectionProps = {
   meaningError?: string;
   isTranslating: boolean;
   isCooldown: boolean;
+  // Parent hook bu degeri config.ts'ten getirir. Component API key'i bilmez;
+  // sadece UI davranisini "hazir/hazir degil" bilgisine gore ayarlar.
   isGeminiConfigured: boolean;
 };
 
@@ -73,7 +75,8 @@ export function AddCardTranslateSection({
           disabled={isTranslating || isCooldown || !isGeminiConfigured}
         >
           {/* Ceviri devam ederken veya cooldown varken buton kapali kalir.
-              Bu Gemini'ye ayni anda cok fazla istek gitmesini engeller. */}
+              Gemini hazir degilken de disabled kalir; boylece eksik env ile
+              API'ye anlamsiz istek atilmaz. */}
           {isTranslating ? (
             <ActivityIndicator size="small" color={COLORS.primary} />
           ) : (
@@ -95,6 +98,8 @@ export function AddCardTranslateSection({
         editable={!isTranslating}
       />
       {!isGeminiConfigured && (
+        // Key eksikse kullanici "buton neden calismiyor" diye kalmaz; mesaj
+        // direkt .env'deki eksik degiskeni soyler.
         <Text style={modalStyles.errorText}>{t('errors.geminiMissing')}</Text>
       )}
       {translateError.length > 0 && (
