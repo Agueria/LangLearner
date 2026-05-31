@@ -50,8 +50,6 @@ export default function RootLayout() {
           <GestureHandlerRootView style={styles.container}>
             {/* eslint-disable-next-line react/style-prop-object */}
             <StatusBar style="auto" />
-            {/* OfflineBanner baglanti gidince tum ekranlarin ustunde gorunur. */}
-            <OfflineBanner />
             {/* AuthGate login/register harici ekranlara girisi korur.
                 Kullanici login degilse tab ekranlari acilmaz. */}
             <AuthGate>
@@ -61,6 +59,10 @@ export default function RootLayout() {
               {/* Slot, Expo Router'in aktif route ekranini buraya yerlestirir. */}
               <Slot />
             </AuthGate>
+            {/* OfflineBanner'i Slot'tan sonra render ediyoruz ki tab/header
+                katmanlari ustunde kalsin. Aksi halde web preview'da banner
+                DOM'da var olsa bile navigation header altinda gizlenebiliyor. */}
+            <OfflineBanner />
           </GestureHandlerRootView>
         </ErrorBoundary>
       </PersistGate>
