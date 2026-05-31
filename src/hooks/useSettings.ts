@@ -10,11 +10,16 @@ import {
   type AppTheme,
 } from '../store/slices/settingsSlice';
 
+// useSettings, Redux settings slice ile i18next arasindaki koprudur.
+// Ekranlar sadece setLanguage/setTheme cagirir; hook hem Redux'u hem de
+// i18n runtime dilini senkron tutar.
 export const useSettings = () => {
   const settings = useSelector((state: RootState) => state.settings);
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
+    // Persist'ten eski dil yuklendiginde i18n hala default "en" olabilir.
+    // Bu effect, store'daki dil ile i18n runtime dilini esitler.
     if (i18n.language !== settings.language) {
       i18n.changeLanguage(settings.language);
     }
@@ -22,6 +27,8 @@ export const useSettings = () => {
 
   const changeLanguage = useCallback(
     (language: AppLanguage) => {
+      // Aninda UI degissin diye i18n.changeLanguage burada direkt cagrilir.
+      // Persist sayesinde secim uygulama tekrar acildiginda da korunur.
       dispatch(setLanguage(language));
       i18n.changeLanguage(language);
     },
@@ -30,6 +37,8 @@ export const useSettings = () => {
 
   const changeDailyReminderEnabled = useCallback(
     (enabled: boolean) => {
+      // Native notification schedule islemi Profile ekraninda yapilir.
+      // Burada sadece kullanicinin tercih state'i tutulur.
       dispatch(setDailyReminderEnabled(enabled));
     },
     [dispatch]
@@ -37,6 +46,7 @@ export const useSettings = () => {
 
   const changeTheme = useCallback(
     (theme: AppTheme) => {
+      // Tema palette secimi useThemeColors hook'u tarafindan okunur.
       dispatch(setTheme(theme));
     },
     [dispatch]

@@ -1,4 +1,6 @@
-// Redux slice for managing deck state.
+// Deck slice, kullanicinin olusturdugu kelime destelerini tutar.
+// Reducer'lar immutable mantikla yeni array dondurur; boylece Redux
+// degisiklikleri guvenilir sekilde algilar.
 import { createSlice, PayloadAction, type UnknownAction } from '@reduxjs/toolkit';
 import type { Card, Deck } from '../../constants/types';
 
@@ -22,6 +24,8 @@ const deckSlice = createSlice({
   initialState,
   reducers: {
     addDeck(state, action: PayloadAction<Deck>) {
+      // Yeni deste local state'e hemen eklenir. Cloud sync ayri hook'ta
+      // queue'ya yazilir, bu yuzden UI internet olmasa bile hizli tepki verir.
       return [...state, action.payload];
     },
     removeDeck(state, action: PayloadAction<string>) {
@@ -34,6 +38,9 @@ const deckSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    // Card slice icindeki add/remove aksiyonlarini dinleyerek deck.cardCount
+    // alanini otomatik guncelliyoruz. Boylece kart sayisi tek tek ekranlarda
+    // elle hesaplanmak zorunda kalmaz.
     builder.addMatcher(
       isAddCardAction,
       (state, action) =>

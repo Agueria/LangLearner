@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../src/constants';
 import { useAuth, useThemeColors } from '../../src/hooks';
 
+// Login ekrani Firebase email/password girisini baslatir.
+// Gercek auth istegi useAuth hook'unda oldugu icin bu component form UI'si,
+// loading/disabled state ve hata metni gostermeye odaklanir.
 const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
@@ -70,6 +73,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
 
   const handleSubmit = useCallback(() => {
+    // Email trim islemi servis katmaninda yapilir; password oldugu gibi gider.
+    // Firebase cevabina gore AuthGate otomatik tab ekranlarina yonlendirir.
     login({ email, password });
   }, [email, login, password]);
 
@@ -82,6 +87,8 @@ export default function LoginScreen() {
         {t('auth.loginSubtitle')}
       </Text>
       {!isConfigured && (
+        // Env eksikse buton kapali kalir. Boylece yanlis konfigurasyonla
+        // Firebase'e anlamsiz istek atilmaz.
         <Text style={styles.error}>{t('auth.firebaseMissing')}</Text>
       )}
       <TextInput

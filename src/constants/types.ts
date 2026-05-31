@@ -1,4 +1,6 @@
-// Deck represents a vocabulary collection the user studies.
+// Deck, kullanicinin calistigi kelime koleksiyonudur.
+// cardCount UI'da hizli gosterim icin tutulur; kart ekleme/silmede deckSlice
+// bunu otomatik gunceller.
 export interface Deck {
   id: string;
   title: string;
@@ -8,7 +10,8 @@ export interface Deck {
   cardCount: number;
 }
 
-// Card represents a word and its meaning within a deck.
+// Card, bir kelime ve anlamini temsil eder.
+// deckId sayesinde tek card array'i icinden secili destenin kartlari filtrelenir.
 export interface Card {
   id: string;
   deckId: string;
@@ -17,7 +20,8 @@ export interface Card {
   createdAt: string;
 }
 
-// User captures profile data and identity.
+// User, Firebase Auth'tan gelen public kimlik bilgisidir.
+// Tokenlar bu interface'e konmaz; AuthSession icindeki tokens alaninda kalir.
 export interface User {
   id: string;
   email: string;
@@ -25,6 +29,8 @@ export interface User {
 }
 
 export type AuthTokens = {
+  // expiresAt absolute timestamp olarak saklanir; refresh gerekip gerekmedigi
+  // Date.now() ile hizli kontrol edilir.
   expiresAt: number;
   idToken: string;
   refreshToken: string;

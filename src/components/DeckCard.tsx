@@ -1,4 +1,5 @@
-// Card UI for a single deck in the list.
+// DeckCard, FlatList icindeki tek deste satiridir.
+// memo ile sarildi; props degismedigi surece yeniden render edilmez.
 import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -68,6 +69,7 @@ const styles = StyleSheet.create({
 export const DeckCard = memo(({ deck, onPress }: DeckCardProps) => {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  // Kapak fotografi olmayan deck'ler icin basligin ilk harfi placeholder olur.
   const initial = deck.title.trim().charAt(0).toUpperCase();
 
   return (
@@ -80,12 +82,14 @@ export const DeckCard = memo(({ deck, onPress }: DeckCardProps) => {
     >
       <View style={styles.media}>
         {deck.coverImage ? (
+          // Kullanici galeri fotografindan kapak sectiyse burada gosterilir.
           <Image
             source={{ uri: deck.coverImage }}
             style={styles.coverImage}
             resizeMode="cover"
           />
         ) : (
+          // Fotograf yoksa gorsel bos kalmasin diye bas harf placeholder'i var.
           <View
             style={[
               styles.placeholder,

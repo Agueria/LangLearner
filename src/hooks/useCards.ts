@@ -13,6 +13,9 @@ type RemoveCardPayload = {
 const createOperationId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+// useCards, kart CRUD islemlerinin tek giris noktasidir.
+// Ekranlar bu hook'u kullaninca local-first davranis otomatik olur:
+// once Redux guncellenir, kullanici login ise cloud sync queue arka planda dolar.
 export const useCards = () => {
   const cards = useSelector((state: RootState) => state.cards);
   const authStatus = useSelector((state: RootState) => state.auth.status);
@@ -21,6 +24,8 @@ export const useCards = () => {
   const handleAddCard = useCallback(
     (card: Card) => {
       dispatch(addCard(card));
+      // Kart kullaniciya hemen gorunur. Internet yoksa sync queue islemi
+      // saklar ve CloudSyncController internet gelince tekrar dener.
       if (authStatus === 'authenticated') {
         dispatch(
           enqueueSyncOperation({
@@ -37,6 +42,8 @@ export const useCards = () => {
   const handleRemoveCard = useCallback(
     ({ cardId, deckId }: RemoveCardPayload) => {
       dispatch(removeCard({ cardId, deckId }));
+      // Delete operasyonunda hem cardId hem deckId gerekir; Firestore path'i
+      // users/{userId}/decks/{deckId}/cards/{cardId} seklindedir.
       if (authStatus === 'authenticated') {
         dispatch(
           enqueueSyncOperation({
@@ -54,6 +61,8 @@ export const useCards = () => {
   const handleUpdateCard = useCallback(
     (card: Card) => {
       dispatch(updateCard(card));
+      // Kart duzenleme de upsert olarak kuyruga girer. Boylece offline
+      // duzenlenen kart internet gelince son haliyle cloud'a yazilir.
       if (authStatus === 'authenticated') {
         dispatch(
           enqueueSyncOperation({

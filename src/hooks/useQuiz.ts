@@ -1,6 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { Card } from '../constants';
 
+// Quiz hook'u UI'den bagimsiz sinav state'ini yonetir.
+// Ekran animasyon/gesture/haptic ile ilgilenir; bu hook sadece hangi karttayiz,
+// cevap gorundu mu ve skor ne durumda sorularini cevaplar.
 export type QuizAnswer = 'correct' | 'incorrect';
 
 export type QuizResult = {
@@ -35,6 +38,8 @@ export const useQuiz = (cards: Card[]): UseQuizResult => {
 
   const progressLabel = useMemo(
     () => ({
+      // Bos deck durumunda "Card 1 of 0" gibi yanlis bir progress yazmamak
+      // icin current degeri 0'a cekilir.
       current: totalCount === 0 ? 0 : currentIndex + 1,
       total: totalCount,
     }),
@@ -54,6 +59,8 @@ export const useQuiz = (cards: Card[]): UseQuizResult => {
 
   const answerCard = useCallback(
     (answer: QuizAnswer) => {
+      // setState async oldugu icin sonuc ekranina gidecek skor degerlerini
+      // once lokal degiskenlerde hesapliyoruz, sonra state'i guncelliyoruz.
       const nextCorrectCount =
         answer === 'correct' ? correctCount + 1 : correctCount;
       const nextIncorrectCount =
@@ -70,6 +77,7 @@ export const useQuiz = (cards: Card[]): UseQuizResult => {
       setIncorrectCount(nextIncorrectCount);
 
       if (!isComplete) {
+        // Quiz bitmediyse bir sonraki karta gecilir ve cevap tekrar gizlenir.
         setCurrentIndex((index) => index + 1);
         setIsAnswerVisible(false);
       }

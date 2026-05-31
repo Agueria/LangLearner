@@ -1,4 +1,6 @@
-// Modal form for creating a new deck.
+// Deck olusturma modal'i.
+// Baslik validation, opsiyonel aciklama, native image picker ile kapak fotografi
+// ve submit sonrasi Redux'a yeni deck yazma islemleri burada yapilir.
 import { useCallback, useEffect, useState } from 'react';
 import {
   Image,
@@ -98,6 +100,7 @@ export function CreateDeckModal({
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const resetForm = useCallback(() => {
+    // Modal kapandiginda onceki form degerleri ve hata mesajlari temizlenir.
     setTitle('');
     setDescription('');
     setCoverImageUri(null);
@@ -107,12 +110,16 @@ export function CreateDeckModal({
 
   useEffect(() => {
     if (!visible) {
+      // Kullanici cancel/backdrop ile kapatirsa modal bir sonraki acilista temiz
+      // baslasin diye form resetlenir.
       resetForm();
     }
   }, [resetForm, visible]);
 
   const validate = useCallback(
     () =>
+      // validateDeckForm saf fonksiyondur; burada sadece secili dile gore
+      // hata mesajlari enjekte edilir.
       validateDeckForm(title, {
         meaningRequired: t('errors.meaningRequired'),
         titleRequired: t('errors.titleRequired'),
@@ -124,6 +131,8 @@ export function CreateDeckModal({
   );
 
   const handleSelectCover = useCallback(async () => {
+    // useImagePicker izin isteme, galeri acma ve hata alertlerini kendi icinde
+    // yonetir. Burada sadece donen uri state'e yazilir.
     const selectedUri = await pickImage();
 
     if (selectedUri) {
@@ -132,6 +141,7 @@ export function CreateDeckModal({
   }, [pickImage]);
 
   const handleSubmit = useCallback(() => {
+    // Submit'e basildiginda validation calisir. Hata varsa Redux'a veri yazilmaz.
     setHasSubmitted(true);
     const nextErrors = validate();
     setErrors(nextErrors);
@@ -141,6 +151,8 @@ export function CreateDeckModal({
     }
 
     const newDeck: Deck = {
+      // Deck id local olarak uretilir ve Firestore dokuman id'si olarak da
+      // kullanilabilir. Bu sayede local/cloud ayni entity'yi isaret eder.
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       title: title.trim(),
       description: description.trim(),
@@ -181,12 +193,14 @@ export function CreateDeckModal({
             onPress={handleSelectCover}
           >
             {coverImageUri ? (
+              // Kapak fotografi secildiyse preview gosterilir.
               <Image
                 source={{ uri: coverImageUri }}
                 style={styles.coverImage}
                 resizeMode="cover"
               />
             ) : (
+              // Fotograf yoksa kamera benzeri placeholder gosterilir.
               <View style={styles.coverPlaceholder}>
                 <View style={styles.cameraIcon}>
                   <View style={styles.cameraTop} />

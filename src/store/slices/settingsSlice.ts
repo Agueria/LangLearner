@@ -1,5 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+// Settings slice, kullanicinin uygulama tercihlerini tutar.
+// Bu slice persist edildigi icin dil, tema ve reminder tercihi uygulama
+// kapanip acilsa da ayni kalir.
 export type AppLanguage = 'en' | 'tr';
 export type AppTheme = 'dark' | 'light';
 
@@ -20,6 +23,8 @@ const settingsSlice = createSlice({
   initialState,
   reducers: {
     setLanguage(state, action: PayloadAction<AppLanguage>) {
+      // Dil degisimi Redux'a yazilir; useSettings hook'u i18n tarafini da
+      // ayni anda gunceller.
       return { ...state, language: action.payload };
     },
     setDailyReminderEnabled(state, action: PayloadAction<boolean>) {

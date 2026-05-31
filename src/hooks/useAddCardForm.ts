@@ -1,4 +1,6 @@
-// Form logic for adding cards with auto-translation.
+// Add card formunun tum is kurallari burada tutulur.
+// Component sadece inputlari cizer; validation, Gemini cevirisi, cooldown,
+// submit ve reset davranislari bu hook icindedir.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Card } from '../constants';
@@ -24,6 +26,8 @@ export const useAddCardForm = ({ deckId, onClose }: UseAddCardFormArgs) => {
   const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const resetForm = useCallback(() => {
+    // Modal kapaninca veya kart eklendikten sonra form temizlenir. Cooldown
+    // timer'i de iptal edilir ki kapanmis modal arka planda state guncellemesin.
     setWord('');
     setMeaning('');
     setErrors({});
@@ -39,6 +43,8 @@ export const useAddCardForm = ({ deckId, onClose }: UseAddCardFormArgs) => {
 
   useEffect(
     () => () => {
+      // Component unmount olursa bekleyen timer temizlenir. Bu memory leak ve
+      // React "state update on unmounted component" uyarilarini engeller.
       if (cooldownTimerRef.current) {
         clearTimeout(cooldownTimerRef.current);
       }
@@ -48,6 +54,8 @@ export const useAddCardForm = ({ deckId, onClose }: UseAddCardFormArgs) => {
 
   const validate = useCallback(
     () =>
+      // Validation mesajlari i18n'den gelir. Boylece ayni kural seti hem TR
+      // hem EN arayuzde dogru metni gosterebilir.
       validateCardForm(word, meaning, {
         meaningRequired: t('errors.meaningRequired'),
         titleRequired: t('errors.titleRequired'),
@@ -61,16 +69,20 @@ export const useAddCardForm = ({ deckId, onClose }: UseAddCardFormArgs) => {
   const handleTranslate = useCallback(async () => {
     const trimmedWord = word.trim();
     if (!trimmedWord) {
+      // Bos kelime icin API'ye gitmeyiz; kullaniciya aninda yerel hata gosteririz.
       setTranslateError(t('errors.wordFirst'));
       return;
     }
     if (isCooldown) {
+      // Gemini tarafina pes pese istek atmayi azaltmak icin kisa cooldown var.
       return;
     }
 
     setTranslateError('');
     setIsTranslating(true);
     try {
+      // Gemini sadece anlam alanini doldurur. Kullanici isterse sonucu manuel
+      // degistirebilir, yani AI cevabi zorunlu dogru kabul edilmez.
       const translated = await translateWord(trimmedWord, 'TR');
       setMeaning(translated);
     } catch (error) {
@@ -99,6 +111,8 @@ export const useAddCardForm = ({ deckId, onClose }: UseAddCardFormArgs) => {
     }
 
     const newCard: Card = {
+      // Lokal id Date.now + random ile uretilir. Bu id hem Redux hem Firestore
+      // dokuman id'si olarak kullanilir.
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       deckId,
       word: word.trim(),

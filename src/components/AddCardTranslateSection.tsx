@@ -1,4 +1,6 @@
-// Meaning input with auto-translate action.
+// Meaning input + auto-translate butonu.
+// Bu component yalnizca UI cizer; ceviri istegi ve cooldown mantigi parent
+// hook tarafindan onTranslate/isTranslating/isCooldown ile yonetilir.
 import {
   ActivityIndicator,
   Pressable,
@@ -68,6 +70,8 @@ export function AddCardTranslateSection({
           onPress={onTranslate}
           disabled={isTranslating || isCooldown}
         >
+          {/* Ceviri devam ederken veya cooldown varken buton kapali kalir.
+              Bu Gemini'ye ayni anda cok fazla istek gitmesini engeller. */}
           {isTranslating ? (
             <ActivityIndicator size="small" color={COLORS.primary} />
           ) : (
@@ -89,6 +93,7 @@ export function AddCardTranslateSection({
         editable={!isTranslating}
       />
       {translateError.length > 0 && (
+        // Gemini veya network hatalari meaning inputunun hemen altinda gosterilir.
         <Text style={modalStyles.errorText}>{translateError}</Text>
       )}
       {meaningError.length > 0 && (

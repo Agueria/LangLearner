@@ -1,4 +1,7 @@
-// App root layout: wires Redux, persistence, and global UI for all routes.
+// Uygulamanin en dis katmani burasidir.
+// Sunumda burayi "butun ekranlari saran altyapi dosyasi" diye anlatabilirsin:
+// Redux store, kalici state, hata yakalama, gesture altyapisi, auth kontrolu,
+// offline banner ve cloud sync burada tek bir kok yapida birlestirilir.
 import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
@@ -23,8 +26,13 @@ const styles = StyleSheet.create({
 
 export default function RootLayout() {
   return (
+    // Provider, Redux store'u tum ekranlara acar. Bu sayede deck, card,
+    // auth, settings ve sync state'lerine her ekrandan custom hooklarla
+    // ulasilabilir.
     <Provider store={store}>
-      {/* Delay UI until persisted state is rehydrated. */}
+      {/* PersistGate, AsyncStorage'dan gelen Redux state yuklenmeden UI'yi
+          baslatmaz. Boylece uygulama acilir acilmaz eski deck/kartlarin
+          bir an bos gorunup sonra gelmesi engellenir. */}
       <PersistGate
         persistor={persistor}
         loading={
@@ -33,14 +41,24 @@ export default function RootLayout() {
           </View>
         }
       >
+        {/* ErrorBoundary beklenmeyen render/runtime hatalarinda beyaz ekran
+            yerine kullaniciya "Try Again" ekrani gosterir. */}
         <ErrorBoundary>
+          {/* GestureHandlerRootView, swipe ve pan gesture'lari icin gerekli
+              kok container'dir. Quiz swipe ve deck swipe-to-delete bunun
+              altinda calisir. */}
           <GestureHandlerRootView style={styles.container}>
             {/* eslint-disable-next-line react/style-prop-object */}
             <StatusBar style="auto" />
-            {/* Global banner for connectivity changes. */}
+            {/* OfflineBanner baglanti gidince tum ekranlarin ustunde gorunur. */}
             <OfflineBanner />
+            {/* AuthGate login/register harici ekranlara girisi korur.
+                Kullanici login degilse tab ekranlari acilmaz. */}
             <AuthGate>
+              {/* CloudSyncController gorsel UI cizmez. Sadece auth + network
+                  durumuna bakip gerekiyorsa Firestore sync tetikler. */}
               <CloudSyncController />
+              {/* Slot, Expo Router'in aktif route ekranini buraya yerlestirir. */}
               <Slot />
             </AuthGate>
           </GestureHandlerRootView>

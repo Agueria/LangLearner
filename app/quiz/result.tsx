@@ -1,4 +1,6 @@
-// Quiz result screen: summarizes the completed study session.
+// Quiz result screen: biten quiz'in skor ozetini gosterir.
+// Skorlar route param olarak gelir; helper fonksiyonlar paramlari guvenli
+// sayiya cevirir ve yuzdeyi hesaplar.
 import { useCallback, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -97,6 +99,8 @@ export default function QuizResultScreen() {
       total?: string;
     }>();
   const deckId = typeof deckIdParam === 'string' ? deckIdParam : '';
+  // URL paramlari string olabilir veya eksik gelebilir. parseResultCount
+  // NaN/undefined durumunu 0'a indirger.
   const correctCount = parseResultCount(correct);
   const incorrectCount = parseResultCount(incorrect);
   const totalCount = parseResultCount(total);
@@ -108,10 +112,12 @@ export default function QuizResultScreen() {
   );
 
   const handleStudyAgain = useCallback(() => {
+    // replace kullanimi result ekranini history'de tutmadan quiz'i yeniden baslatir.
     router.replace(`/quiz/${deckId}`);
   }, [deckId, router]);
 
   const handleBackToDeck = useCallback(() => {
+    // Deste detayina donerken push kullanilir; kullanici deck ekraninda kalir.
     router.push(`/deck/${deckId}`);
   }, [deckId, router]);
 

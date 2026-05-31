@@ -36,11 +36,20 @@ type Credentials = {
   password: string;
 };
 
+// Firebase Auth burada SDK yerine REST API ile kullaniliyor.
+// Bunun avantajlari:
+// - Expo icinde ek native Firebase kurulumuna gerek kalmaz.
+// - Testlerde fetch mocklamak kolay olur.
+// - Auth session'i bizim SecureStore servisimizle acik sekilde yonetilir.
 const AUTH_BASE_URL = 'https://identitytoolkit.googleapis.com/v1';
 const TOKEN_BASE_URL = 'https://securetoken.googleapis.com/v1';
+// Token bitmeden 1 dakika once refresh ederek istegin ortasinda token
+// expire olma riskini azaltiyoruz.
 const EXPIRY_SAFETY_WINDOW_MS = 60 * 1000;
 
 const mapAuthCode = (code: string) => {
+  // Firebase hata kodlari teknik ve Ingilizce gelir. Burada bunlari kullanicinin
+  // anlayacagi kisa mesajlara ceviriyoruz.
   if (code.includes('EMAIL_EXISTS')) {
     return 'This email is already registered.';
   }
@@ -65,6 +74,8 @@ const mapAuthCode = (code: string) => {
 
 export const mapFirebaseAuthError = async (response: Response) => {
   try {
+    // Firebase hata cevabi JSON formatindadir. Parse edilemezse generic hata
+    // donulur, boylece UI ham server cevabi gostermez.
     const body = (await response.json()) as FirebaseErrorResponse;
     return mapAuthCode(body.error?.message ?? '');
   } catch {
@@ -73,6 +84,8 @@ export const mapFirebaseAuthError = async (response: Response) => {
 };
 
 const assertFirebaseConfigured = () => {
+  // Auth ve Firestore kodu repo icinde hazir, ancak gercek Firebase projesi
+  // kullanicidan env ister. Env yoksa istek atmadan acik hata veriyoruz.
   if (!isFirebaseConfigured) {
     throw new Error(
       'Firebase is not configured. Add EXPO_PUBLIC_FIREBASE_API_KEY and EXPO_PUBLIC_FIREBASE_PROJECT_ID to .env.'
@@ -85,6 +98,8 @@ const toTokens = ({
   idToken,
   refreshToken,
 }: FirebaseAuthResponse): AuthTokens => ({
+  // Firebase expiresIn saniye verir. Biz Date.now tabanli absolute timestamp
+  // sakliyoruz ki daha sonra kolayca "hala gecerli mi" diye kontrol edelim.
   expiresAt: Date.now() + Number(expiresIn) * 1000,
   idToken,
   refreshToken,
@@ -105,6 +120,8 @@ const requestAuth = async (
 ) => {
   assertFirebaseConfigured();
 
+  // signUp ve signIn endpoint'leri ayni body yapisini kullanir.
+  // path parametresi sadece hangi endpoint'e gidecegimizi belirler.
   const response = await fetch(`${AUTH_BASE_URL}/${path}?key=${FIREBASE_API_KEY}`, {
     body: JSON.stringify({
       email: credentials.email.trim(),
@@ -122,6 +139,9 @@ const requestAuth = async (
   }
 
   const session = toSession((await response.json()) as FirebaseAuthResponse);
+  // Basarili auth sonrasi session SecureStore'a yazilir. AsyncStorage yerine
+  // SecureStore secilmesinin nedeni token gibi hassas veriyi native guvenli
+  // depoda tutmaktir.
   await saveAuthSession(session);
   return session;
 };
@@ -137,6 +157,8 @@ export const refreshAuthSession = async (
 ): Promise<AuthSession> => {
   assertFirebaseConfigured();
 
+  // idToken kisa omurludur, refreshToken ile yenilenir. Bu akisi kullanmazsak
+  // uygulama bir sure acik kalinca Firestore istekleri 401 almaya baslar.
   const response = await fetch(`${TOKEN_BASE_URL}/token?key=${FIREBASE_API_KEY}`, {
     body: new URLSearchParams({
       grant_type: 'refresh_token',
@@ -149,6 +171,8 @@ export const refreshAuthSession = async (
   });
 
   if (!response.ok) {
+    // Refresh token artik gecersizse local session'i temizleriz. Aksi halde
+    // uygulama surekli bozuk token ile tekrar denemeye devam eder.
     await clearAuthSession();
     throw new Error(await mapFirebaseAuthError(response));
   }
@@ -171,6 +195,8 @@ export const refreshAuthSession = async (
 };
 
 export const getValidAuthSession = async (): Promise<AuthSession | null> => {
+  // Tum cloud servisleri bu fonksiyonu kullanir. Boylece her caller token
+  // expiry/refresh detaylarini tekrar yazmak zorunda kalmaz.
   const session = await loadAuthSession();
 
   if (!session) {

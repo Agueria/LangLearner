@@ -1,4 +1,6 @@
-// Quiz screen: studies cards from a selected deck and tracks the score.
+// Quiz screen: secilen destedeki kartlari calisma akisi.
+// Bu ekran useQuiz hook'undan skor/state alir, Reanimated ile flip/swipe
+// animasyonlarini cizer ve cevaplarda haptic feedback verir.
 import { useCallback, useEffect, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -193,10 +195,12 @@ export default function QuizScreen() {
   const { decks } = useDecks();
   const { cards } = useCards();
   const deck = useMemo(
+    // Route'taki deckId ile Redux'taki deck'i eslestiriyoruz.
     () => decks.find((item) => item.id === deckId),
     [deckId, decks]
   );
   const deckCards = useMemo(
+    // Quiz sadece secili deck'in kartlariyla calisir.
     () => cards.filter((card) => card.deckId === deckId),
     [cards, deckId]
   );
@@ -219,6 +223,8 @@ export default function QuizScreen() {
 
   const handleAnswer = useCallback(
     (answer: QuizAnswer) => {
+      // Cevaba gore farkli haptic feedback verilir. Haptic hata verse bile
+      // quiz akisi bozulmasin diye catch ile yutulur.
       if (answer === 'correct') {
         playCorrectHaptic().catch(() => undefined);
       } else {
@@ -227,6 +233,8 @@ export default function QuizScreen() {
       const result = answerCard(answer);
 
       if (result.isComplete) {
+        // Quiz bitince skorlar route param olarak result ekranina gider.
+        // Result ekrani parse edip yuzdeyi hesaplar.
         router.replace({
           pathname: '/quiz/result',
           params: {
@@ -247,17 +255,20 @@ export default function QuizScreen() {
   }, [showAnswer]);
 
   useEffect(() => {
+    // Cevap gorunur/gizli durumuna gore kartin flip progress degeri animate olur.
     flipProgress.value = withTiming(isAnswerVisible ? 1 : 0, {
       duration: 260,
     });
   }, [flipProgress, isAnswerVisible]);
 
   useEffect(() => {
+    // Yeni karta gecince onceki swipe offset'i sifirlanir.
     translateX.value = withSpring(0);
     translateY.value = withSpring(0);
   }, [currentCard?.id, translateX, translateY]);
 
   const cardAnimatedStyle = useAnimatedStyle(() => {
+    // Kart saga/sola suruklenirken hafif doner ve opacity azalir.
     const rotate = interpolate(
       translateX.value,
       [-180, 0, 180],
@@ -281,6 +292,7 @@ export default function QuizScreen() {
   });
 
   const faceAnimatedStyle = useAnimatedStyle(() => ({
+    // Flip animasyonu kart yuzunun Y ekseninde donmesiyle olusur.
     transform: [
       {
         rotateY: `${interpolate(
@@ -293,6 +305,7 @@ export default function QuizScreen() {
   }));
 
   const swipeGesture = Gesture.Pan()
+    // Cevap gorunmeden swipe aktif olmaz; once kullanici cevabi acmali.
     .enabled(isAnswerVisible)
     .onUpdate((event) => {
       translateX.value = event.translationX;
@@ -300,12 +313,14 @@ export default function QuizScreen() {
     })
     .onEnd((event) => {
       if (event.translationX > 90) {
+        // Saga swipe = kullanici bildi.
         translateX.value = withTiming(360, { duration: 180 });
         runOnJS(handleAnswer)('correct');
         return;
       }
 
       if (event.translationX < -90) {
+        // Sola swipe = tekrar calismali.
         translateX.value = withTiming(-360, { duration: 180 });
         runOnJS(handleAnswer)('incorrect');
         return;
@@ -316,6 +331,7 @@ export default function QuizScreen() {
     });
 
   if (!deck) {
+    // Deck bulunamazsa fallback gosterilir; route param hatasi app'i dusurmez.
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Pressable style={styles.backButton} onPress={handleBackToDeck}>
@@ -331,6 +347,7 @@ export default function QuizScreen() {
   }
 
   if (!currentCard) {
+    // Bos deck icin quiz baslamaz; kullaniciya kart eklemesi soylenir.
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Pressable style={styles.backButton} onPress={handleBackToDeck}>

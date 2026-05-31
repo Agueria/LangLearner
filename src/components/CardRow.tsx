@@ -1,4 +1,5 @@
-// Single row for a card in the deck detail list.
+// Deck detayindaki tek kart satiri.
+// Pressable oldugu icin satira basinca EditCardModal acilir.
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { COLORS, type Card } from '../constants';

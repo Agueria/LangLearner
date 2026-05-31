@@ -1,4 +1,6 @@
-// Modal form for adding a card to a deck.
+// Kart ekleme modal'i.
+// Input UI bu componentte, asil form state ve Gemini translate akisi
+// useAddCardForm hook'unda tutulur.
 import { useEffect } from 'react';
 import {
   KeyboardAvoidingView,
@@ -52,6 +54,8 @@ export function AddCardModal({
   } = useAddCardForm({ deckId, onClose });
   useEffect(() => {
     if (!visible) {
+      // Modal kapaninca hook icindeki form state temizlenir. Bu sayede yeni
+      // kart eklerken eski kelime/anlam kalmaz.
       resetForm();
     }
   }, [resetForm, visible]);
@@ -90,6 +94,8 @@ export function AddCardModal({
             <Text style={modalStyles.errorText}>{errors.word}</Text>
           )}
         </View>
+        {/* Meaning bolumu ayri componenttir; auto-translate butonu ve
+            translate error metni orada cizilir. */}
         <AddCardTranslateSection
           meaning={meaning}
           onMeaningChange={setMeaning}

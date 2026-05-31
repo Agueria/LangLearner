@@ -26,6 +26,10 @@ import { useNetworkStatus } from './useNetworkStatus';
 const toErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Cloud sync failed.';
 
+// Firestore'dan gelen tum vocabulary local Redux state'e yuklenir.
+// Once mevcut deck'ler silinir, sonra cloud deck/card listesi eklenir.
+// En sonda deck.cardCount tekrar hesaplanir; cloud'daki stale cardCount'a
+// guvenmek yerine kart listesinden dogru deger uretilir.
 const hydrateVocabulary = (
   dispatch: AppDispatch,
   existingDecks: Deck[],
@@ -55,6 +59,8 @@ const applyOperation = async (
   session: NonNullable<Awaited<ReturnType<typeof getValidAuthSession>>>,
   operation: SyncOperation
 ) => {
+  // Queue'daki her operasyon tek bir Firestore REST cagrisina map edilir.
+  // Bu fonksiyon operasyon tipini servis fonksiyonuna ceviren katmandir.
   switch (operation.type) {
     case 'deleteCard':
       await deleteCloudCard(session, operation.deckId, operation.cardId);
@@ -82,6 +88,8 @@ export const useCloudSync = () => {
   const network = useNetworkStatus();
 
   const syncNow = useCallback(async () => {
+    // Sync sadece kullanici giris yaptiysa, internet varsa ve zaten sync
+    // calismiyorsa baslar. Bu guard ayni anda iki cloud sync'i engeller.
     if (
       auth.status !== 'authenticated' ||
       !network.isConnected ||
@@ -101,6 +109,8 @@ export const useCloudSync = () => {
       }
 
       if (sync.ownerId !== session.user.id) {
+        // Local cache baska kullaniciya aitse upload yapmayiz. Once cloud'dan
+        // aktif kullanicinin verisini indiririz ve ownerId'yi degistiririz.
         const vocabulary = await fetchCloudVocabulary(session);
         hydrateVocabulary(dispatch, decks, vocabulary);
         dispatch(setSyncOwner(session.user.id));
@@ -109,15 +119,23 @@ export const useCloudSync = () => {
       }
 
       await sync.queue.reduce(async (previousOperation, operation) => {
+        // reduce ile operasyonlar sirali calisir. Silme/ekleme sirasi karisirsa
+        // Firestore'da eski veri kalabilecegi icin burada paralel degil sirali
+        // replay tercih edildi.
         await previousOperation;
         await applyOperation(session, operation);
         dispatch(removeSyncOperation(operation.id));
       }, Promise.resolve());
 
+      // Queue bittikten sonra local state'in son halini cloud'a tekrar yazariz.
+      // Bu ekstra pass, ilk login veya onceki yarim sync durumlarinda local ve
+      // cloud'un ayni noktaya gelmesine yardim eder.
       await Promise.all(decks.map((deck) => upsertCloudDeck(session, deck)));
       await Promise.all(cards.map((card) => upsertCloudCard(session, card)));
 
       const vocabulary = await fetchCloudVocabulary(session);
+      // Firestore'daki son durum tekrar hydrate edilerek local cache ile cloud
+      // arasindaki farklar kapanir.
       hydrateVocabulary(dispatch, decks, vocabulary);
       dispatch(clearSyncQueue());
       dispatch(syncSucceeded());

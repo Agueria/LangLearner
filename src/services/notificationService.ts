@@ -11,12 +11,16 @@ export const scheduleDailyReminder = async ({
   body,
   title,
 }: ReminderContent): Promise<boolean> => {
+  // Bildirim native izin ister. Izin verilmezse false doneriz; Profile ekrani
+  // buna gore kullaniciya "permission denied" mesaji gosterir.
   const permission = await Notifications.requestPermissionsAsync();
 
   if (!permission.granted) {
     return false;
   }
 
+  // Tek bir gunluk hatirlatici istiyoruz. Once eskileri temizlemek duplicate
+  // notification olusmasini engeller.
   await Notifications.cancelAllScheduledNotificationsAsync();
   await Notifications.scheduleNotificationAsync({
     content: {
@@ -34,5 +38,7 @@ export const scheduleDailyReminder = async ({
 };
 
 export const cancelDailyReminder = async () => {
+  // Uygulamada sadece bu reminder kullanildigi icin tum schedule'lari temizlemek
+  // basit ve guvenli bir kapatma davranisi saglar.
   await Notifications.cancelAllScheduledNotificationsAsync();
 };

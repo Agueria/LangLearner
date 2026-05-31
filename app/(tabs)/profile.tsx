@@ -1,4 +1,6 @@
-// Profile tab for local settings.
+// Profile tab: hesap, cloud sync ve lokal uygulama ayarlari.
+// Dil, tema, gunluk reminder, logout ve manuel sync aksiyonlari bu ekranda
+// kullaniciya sunulur.
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -103,6 +105,8 @@ export default function ProfileScreen() {
 
   const handleLanguageChange = useCallback(
     (nextLanguage: 'en' | 'tr') => {
+      // Dil degisiminde hafif haptic feedback veriyoruz; sonra Redux + i18n
+      // useSettings hook'u uzerinden guncelleniyor.
       playLightHaptic().catch(() => undefined);
       setLanguage(nextLanguage);
     },
@@ -111,6 +115,7 @@ export default function ProfileScreen() {
 
   const handleThemeChange = useCallback(
     (nextTheme: 'dark' | 'light') => {
+      // Tema secimi persist edildigi icin uygulama kapansa bile korunur.
       playLightHaptic().catch(() => undefined);
       setTheme(nextTheme);
     },
@@ -120,6 +125,8 @@ export default function ProfileScreen() {
   const handleReminderToggle = useCallback(
     async (enabled: boolean) => {
       if (isReminderUpdating) {
+        // Native notification scheduling devam ederken tekrar toggle edilirse
+        // duplicate schedule/cancel riski olur. Bu guard onu engeller.
         return;
       }
 
@@ -128,6 +135,7 @@ export default function ProfileScreen() {
 
       try {
         if (!enabled) {
+          // Reminder kapatilirken schedule temizlenir ve Redux tercihi false olur.
           await cancelDailyReminder();
           setDailyReminderEnabled(false);
           setReminderMessage(t('notifications.disabled'));
@@ -135,11 +143,13 @@ export default function ProfileScreen() {
         }
 
         const wasScheduled = await scheduleDailyReminder({
+          // Bildirim metinleri i18n'den gelir; secili dile gore schedule edilir.
           body: t('notifications.body'),
           title: t('notifications.title'),
         });
 
         setDailyReminderEnabled(wasScheduled);
+        // Izin verilmezse toggle false kalir ve kullanici mesaj gorur.
         setReminderMessage(
           wasScheduled
             ? t('notifications.scheduled')
@@ -153,6 +163,8 @@ export default function ProfileScreen() {
   );
 
   const handleLogout = useCallback(() => {
+    // Logout SecureStore session'i temizler. AuthGate sonrasinda login route'una
+    // yonlendirme yapar.
     logout();
   }, [logout]);
 
@@ -163,6 +175,7 @@ export default function ProfileScreen() {
       </Text>
 
       <View style={[styles.section, { backgroundColor: colors.surface }]}>
+        {/* Hesap bolumu aktif Firebase kullanicisini ve cikis aksiyonunu gosterir. */}
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           {t('auth.account')}
         </Text>
@@ -177,6 +190,8 @@ export default function ProfileScreen() {
       </View>
 
       <View style={[styles.section, { backgroundColor: colors.surface }]}>
+        {/* Cloud sync bolumu pending queue sayisini, son sync zamanini ve
+            manuel "sync now" aksiyonunu gosterir. */}
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           {t('sync.title')}
         </Text>

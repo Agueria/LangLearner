@@ -1,4 +1,6 @@
-// Decks tab: list decks and create new ones.
+// Decks tab: kullanicinin kelime destelerini listeler.
+// Burada FlatList performans ayarlari, swipe-to-delete gesture'i ve yeni deck
+// modalinin acilip kapanmasi yonetilir.
 import { memo, useCallback, useLayoutEffect, useState } from 'react';
 import { useNavigation, useRouter } from 'expo-router';
 import {
@@ -75,6 +77,7 @@ type HeaderAddButtonProps = {
 };
 
 function HeaderAddButton({ onPress }: HeaderAddButtonProps) {
+  // Header butonu useLayoutEffect ile navigation bar'a yerlestirilir.
   return (
     <Pressable style={styles.addButton} onPress={onPress}>
       <Text style={styles.addButtonText}>+</Text>
@@ -105,6 +108,7 @@ const DeckListItem = memo(({
 
   const renderRightActions = useCallback(
     () => (
+      // Swipe saga/sola acilinca gorunen delete aksiyonu.
       <Pressable style={styles.deleteAction} onPress={handleDelete}>
         <Text style={styles.deleteText}>{t('actions.delete')}</Text>
       </Pressable>
@@ -137,6 +141,7 @@ export default function DecksScreen() {
 
   const handleOpenDeck = useCallback(
     (deckId: string) => {
+      // Dynamic route: app/deck/[id].tsx ekranina secilen deck id'si gider.
       router.push(`/deck/${deckId}`);
     },
     [router],
@@ -144,6 +149,7 @@ export default function DecksScreen() {
 
   const handleDeleteDeck = useCallback(
     (deckId: string) => {
+      // Yanlislikla swipe ile veri kaybi olmasin diye silmeden once onay alinir.
       Alert.alert(t('actions.delete'), t('decks.deck'), [
         { text: t('actions.cancel'), style: 'cancel' },
         {
@@ -178,6 +184,8 @@ export default function DecksScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={decks.length === 0 ? styles.emptyContainer : styles.listContainer}
         initialNumToRender={8}
+        // FlatList ayarlari buyuk deck listelerinde ilk render ve scroll
+        // performansini korumak icin eklendi.
         renderItem={renderItem}
         ListEmptyComponent={EmptyDeckList}
         maxToRenderPerBatch={8}

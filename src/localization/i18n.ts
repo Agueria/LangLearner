@@ -1,6 +1,9 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
+// Tum kullaniciya gorunen metinler burada toplanir.
+// Ekranlar t('...') key'i kullandigi icin dil degisince UI yeniden render olur
+// ve hardcoded metin daginikligi azalir.
 export const resources = {
   en: {
     translation: {
@@ -259,11 +262,15 @@ export const resources = {
 } as const;
 
 i18n.use(initReactI18next).init({
+  // Expo/Jest ortaminda JSON compatibility uyarisi almamak icin v4 modu.
   compatibilityJSON: 'v4',
   fallbackLng: 'en',
   interpolation: {
+    // React Native text render ettigimiz icin HTML escape'e ihtiyac yok.
     escapeValue: false,
   },
+  // Varsayilan dil Ingilizce. Persist'ten gelen kullanici tercihi useSettings
+  // hook'u tarafindan uygulama acilisinda tekrar set edilir.
   lng: 'en',
   resources,
 });

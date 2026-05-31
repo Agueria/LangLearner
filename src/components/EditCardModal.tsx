@@ -1,4 +1,6 @@
-// Modal form for editing an existing card.
+// Kart duzenleme modal'i.
+// Secili kartin mevcut word/meaning degerleri local form state'e kopyalanir.
+// Kaydet updateCard, sil removeCard aksiyonunu tetikler.
 import { useCallback, useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -56,6 +58,7 @@ export function EditCardModal({
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const resetForm = useCallback(() => {
+    // Modal kapandiginda local input ve hata state'i sifirlanir.
     setWord('');
     setMeaning('');
     setErrors({});
@@ -68,6 +71,7 @@ export function EditCardModal({
       return;
     }
     if (card) {
+      // Modal acildiginda secili kartin degerleri inputlara doldurulur.
       setWord(card.word);
       setMeaning(card.meaning);
     }
@@ -86,6 +90,7 @@ export function EditCardModal({
   );
 
   const handleSubmit = useCallback(() => {
+    // Validation basarisizsa veya secili card yoksa kayit yapilmaz.
     setHasSubmitted(true);
     const nextErrors = validate();
     setErrors(nextErrors);
@@ -95,6 +100,8 @@ export function EditCardModal({
     }
 
     updateCard({
+      // Kart id/deckId/createdAt korunur; sadece kullanicinin duzenledigi
+      // word ve meaning alanlari trimlenerek guncellenir.
       ...card,
       word: word.trim(),
       meaning: meaning.trim(),
@@ -107,6 +114,8 @@ export function EditCardModal({
     if (!card) {
       return;
     }
+    // removeCard hem local state'i temizler hem de login varsa deleteCard sync
+    // operasyonunu queue'ya ekler.
     removeCard({ cardId: card.id, deckId: card.deckId });
     onClose();
     resetForm();

@@ -2,6 +2,10 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLORS } from '../constants';
 
+// ErrorBoundary class component olmak zorunda; React hata yakalama API'si
+// getDerivedStateFromError gibi lifecycle metodlarini class uzerinden sunar.
+// Bu katman beklenmeyen render hatalarinda tum uygulamanin bos ekranda
+// kalmasini engeller.
 type ErrorBoundaryProps = {
   children: React.ReactNode;
 };
@@ -57,10 +61,14 @@ export class ErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // React, child component render sirasinda hata firlatirsa buraya gelir.
+    // State'e error yazinca render fallback ekrana gecer.
     return { error };
   }
 
   handleReset = () => {
+    // Kullanici Try Again'e basinca hata state'i temizlenir ve children tekrar
+    // render edilmeye calisir.
     this.setState({ error: null });
   };
 
@@ -69,6 +77,7 @@ export class ErrorBoundary extends React.Component<
     const { error } = this.state;
 
     if (!error) {
+      // Hata yoksa normal uygulama agaci aynen render edilir.
       return children;
     }
 

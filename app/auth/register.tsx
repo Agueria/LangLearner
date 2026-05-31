@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../src/constants';
 import { useAuth, useThemeColors } from '../../src/hooks';
 
+// Register ekrani yeni Firebase kullanicisi olusturur.
+// Basarili kayit sonrasinda Firebase session dondugu icin kullanici otomatik
+// login olmus kabul edilir.
 const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
@@ -71,6 +74,8 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const localError = useMemo(() => {
+    // Basit client-side validation ile Firebase'e gitmeden once bariz hatalari
+    // yakaliyoruz. Asil kesin dogrulama yine Firebase tarafinda yapilir.
     if (password.length > 0 && password.length < 6) {
       return t('auth.passwordTooShort');
     }
@@ -82,6 +87,7 @@ export default function RegisterScreen() {
 
   const handleSubmit = useCallback(() => {
     if (localError) {
+      // Local hata varsa request atmayiz; ekrandaki error metni yeterlidir.
       return;
     }
     register({ email, password });

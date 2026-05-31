@@ -1,4 +1,6 @@
-// Deck detail screen: shows cards and allows adding new ones.
+// Deck detail screen: secilen destenin kartlarini gosterir.
+// Bu ekran deck id'sini route parametresinden alir, kartlari filtreler,
+// Add/Edit modal'larini acar ve quiz akisini baslatir.
 import { useCallback, useMemo, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -101,6 +103,8 @@ export default function DeckDetailScreen() {
   const { t } = useTranslation();
   const colors = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
+  // Expo Router parametresi string veya array olabilir. Bu projede tek id
+  // bekledigimiz icin string degilse guvenli bos deger kullanilir.
   const deckId = typeof id === 'string' ? id : '';
   const { decks } = useDecks();
   const { cards } = useCards();
@@ -109,11 +113,15 @@ export default function DeckDetailScreen() {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
 
   const deck = useMemo(
+    // Deck lookup memoize edilir. Deck listesi veya route id degismediyse
+    // gereksiz find islemi tekrar calismaz.
     () => decks.find((item) => item.id === deckId),
     [deckId, decks]
   );
 
   const deckCards = useMemo(
+    // Kartlar global state'te tek array olarak durur. Detay ekraninda sadece
+    // bu deck'e ait kartlari filtreliyoruz.
     () => cards.filter((card) => card.deckId === deckId),
     [cards, deckId]
   );
@@ -124,6 +132,7 @@ export default function DeckDetailScreen() {
     setIsAddModalOpen(false);
   }, []);
   const handleOpenEdit = useCallback((card: Card) => {
+    // Hangi kartin duzenlenecegi modal state'inde tutulur.
     setSelectedCard(card);
     setIsEditModalOpen(true);
   }, []);
@@ -135,6 +144,7 @@ export default function DeckDetailScreen() {
     router.push('/(tabs)/decks');
   }, [router]);
   const handleStartQuiz = useCallback(() => {
+    // Quiz ekrani da dynamic route kullanir: app/quiz/[deckId].tsx.
     router.push(`/quiz/${deckId}`);
   }, [deckId, router]);
 
@@ -146,6 +156,8 @@ export default function DeckDetailScreen() {
   );
 
   if (!deck) {
+    // Kullanici silinmis/eski bir linkten gelirse uygulama crash etmek yerine
+    // "deck not found" empty state'i gosterir.
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
@@ -182,6 +194,8 @@ export default function DeckDetailScreen() {
           deckCards.length === 0 ? styles.emptyContainer : styles.listContainer
         }
         initialNumToRender={10}
+        // Kart listesi buyuyebilir; batch/window ayarlari gereksiz render
+        // maliyetini azaltir.
         renderItem={renderItem}
         ListEmptyComponent={
           <Text style={[styles.emptyText, { color: colors.mutedText }]}>

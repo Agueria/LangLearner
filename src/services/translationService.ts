@@ -1,4 +1,6 @@
 // Gemini translation service using REST API.
+// Kart ekleme formunda "Auto-translate" butonu bu servisi cagirir.
+// Servis yalnizca kisa ceviri metni donmeye zorlayan bir prompt yollar.
 import { GEMINI_API_KEY } from '../constants/config';
 
 type GeminiPart = {
@@ -24,7 +26,8 @@ type GeminiResponse = {
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 export const mapTranslationError = (error: unknown): Error => {
-  // Preserve known API errors and normalize everything else into a user-facing network error.
+  // Bilinen API hatalarini koruyoruz, beklenmeyen her seyi kullanicinin
+  // anlayacagi network hatasina ceviriyoruz.
   if (error instanceof Error) {
     if (error.message === 'Too many requests, please wait') {
       return error;
@@ -44,6 +47,8 @@ export const translateWord = async (
   word: string,
   targetLang: string
 ): Promise<string> => {
+  // Prompt'a "Return only..." eklenmesinin nedeni, Gemini'nin aciklama veya
+  // cumle uretmesi yerine sadece kart anlamina yazilacak kisa cevabi donmesidir.
   const prompt = `Translate the following word to ${targetLang}. Return only the translated word or short phrase, nothing else: ${word}`;
 
   const body: GeminiRequest = {
@@ -60,6 +65,7 @@ export const translateWord = async (
     });
 
     if (response.status === 429) {
+      // Rate limit ayri yakalanir ki UI "bekle" mesajini gosterebilsin.
       throw new Error('Too many requests, please wait');
     }
 
@@ -75,6 +81,7 @@ export const translateWord = async (
       }
 
       if (response.status === 400 || response.status === 401) {
+        // API key veya request format sorunlari kullaniciya net soylenir.
         throw new Error('Translation failed. Check your API key and request.');
       }
       if (response.status === 403) {
@@ -86,6 +93,8 @@ export const translateWord = async (
     }
 
     const data = (await response.json()) as GeminiResponse;
+    // Gemini cevabinda ilk candidate/part kullaniliyor. Bos cevap gelirse
+    // kart anlamini bos kaydetmek yerine hata firlatilir.
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
     if (!text) {

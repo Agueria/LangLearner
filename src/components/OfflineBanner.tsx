@@ -1,4 +1,5 @@
-// Banner shown when the device is offline.
+// Cihaz offline oldugunda tum ekranlarin ustunde gorunen banner.
+// NetInfo ile baglanti takip edilir; opacity animasyonu ile girip cikar.
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,12 +29,14 @@ const styles = StyleSheet.create({
 export function OfflineBanner() {
   const { t } = useTranslation();
   const { isConnected, isInternetReachable } = useNetworkStatus();
+  // Sadece network'e bagli olmak yetmez; captive portal gibi durumlarda
+  // isInternetReachable false olabilir. Bu yuzden iki deger birlikte kontrol edilir.
   const isOffline = !(isConnected && isInternetReachable);
   const opacity = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    // Fade in/out as connectivity changes.
+    // Baglanti degistikce banner fade in/out olur.
     Animated.timing(opacity, {
       toValue: isOffline ? 1 : 0,
       duration: 200,
@@ -46,7 +49,7 @@ export function OfflineBanner() {
       pointerEvents={isOffline ? 'auto' : 'none'}
       style={[
         styles.banner,
-        // Keep the banner below the status bar.
+        // Banner status bar'in altinda kalsin diye safe area top eklenir.
         { paddingTop: insets.top + 8, opacity },
       ]}
     >
