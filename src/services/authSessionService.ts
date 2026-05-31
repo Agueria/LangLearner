@@ -7,13 +7,13 @@ import type { AuthSession } from '../constants/types';
 // anlatabilirsin.
 const AUTH_SESSION_KEY = 'langlearner.auth.session';
 
-const useWebStorage = () =>
+const getWebStorage = () =>
   Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage;
 
 export const saveAuthSession = async (session: AuthSession) => {
   // SecureStore string saklar, bu yuzden session JSON'a cevrilir.
   const serializedSession = JSON.stringify(session);
-  const webStorage = useWebStorage();
+  const webStorage = getWebStorage();
   if (webStorage) {
     webStorage.setItem(AUTH_SESSION_KEY, serializedSession);
     return;
@@ -23,7 +23,7 @@ export const saveAuthSession = async (session: AuthSession) => {
 };
 
 export const loadAuthSession = async (): Promise<AuthSession | null> => {
-  const webStorage = useWebStorage();
+  const webStorage = getWebStorage();
   const rawSession = webStorage
     ? webStorage.getItem(AUTH_SESSION_KEY)
     : await SecureStore.getItemAsync(AUTH_SESSION_KEY);
@@ -47,7 +47,7 @@ export const loadAuthSession = async (): Promise<AuthSession | null> => {
 };
 
 export const clearAuthSession = async () => {
-  const webStorage = useWebStorage();
+  const webStorage = getWebStorage();
   if (webStorage) {
     webStorage.removeItem(AUTH_SESSION_KEY);
     return;

@@ -42,6 +42,54 @@ describe('translation service', () => {
     );
   });
 
+  it('maps invalid Gemini key or request responses to a setup message', async () => {
+    mockedFetch.mockResolvedValue({
+      json: async () => ({ error: { message: 'API key not valid' } }),
+      ok: false,
+      status: 400,
+    });
+
+    await expect(translateWord('hello', 'TR')).rejects.toThrow(
+      'Translation failed. Check your API key and request.'
+    );
+  });
+
+  it('maps Gemini access denied responses to a permission message', async () => {
+    mockedFetch.mockResolvedValue({
+      json: async () => ({ error: { message: 'permission denied' } }),
+      ok: false,
+      status: 403,
+    });
+
+    await expect(translateWord('hello', 'TR')).rejects.toThrow(
+      'Translation failed. Access denied for this API key.'
+    );
+  });
+
+  it('maps unexpected failed responses to a safe retry message', async () => {
+    mockedFetch.mockResolvedValue({
+      json: async () => ({ error: { message: 'model temporarily unavailable' } }),
+      ok: false,
+      status: 503,
+    });
+
+    await expect(translateWord('hello', 'TR')).rejects.toThrow(
+      'Translation failed. Please try again later.'
+    );
+  });
+
+  it('rejects empty Gemini responses instead of saving a blank meaning', async () => {
+    mockedFetch.mockResolvedValue({
+      json: async () => ({ candidates: [{ content: { parts: [] } }] }),
+      ok: true,
+      status: 200,
+    });
+
+    await expect(translateWord('hello', 'TR')).rejects.toThrow(
+      'Empty translation response from Gemini'
+    );
+  });
+
   it('preserves known translation errors', () => {
     const error = new Error('Translation failed. Access denied for this API key.');
 

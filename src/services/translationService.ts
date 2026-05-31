@@ -77,16 +77,6 @@ export const translateWord = async (
     }
 
     if (!response.ok) {
-      let serverMessage = '';
-      try {
-        const errorBody = (await response.json()) as {
-          error?: { message?: string };
-        };
-        serverMessage = errorBody.error?.message ?? '';
-      } catch {
-        serverMessage = '';
-      }
-
       if (response.status === 400 || response.status === 401) {
         // API key veya request format sorunlari kullaniciya net soylenir.
         throw new Error('Translation failed. Check your API key and request.');
@@ -94,9 +84,7 @@ export const translateWord = async (
       if (response.status === 403) {
         throw new Error('Translation failed. Access denied for this API key.');
       }
-      throw new Error(
-        serverMessage || 'Translation failed. Please try again later.'
-      );
+      throw new Error('Translation failed. Please try again later.');
     }
 
     const data = (await response.json()) as GeminiResponse;
