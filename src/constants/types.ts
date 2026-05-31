@@ -23,3 +23,14 @@ export interface User {
   email: string;
   displayName?: string;
 }
+
+export type AuthTokens = {
+  expiresAt: number;
+  idToken: string;
+  refreshToken: string;
+};
+
+export type AuthSession = {
+  tokens: AuthTokens;
+  user: User;
+};

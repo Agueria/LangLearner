@@ -18,3 +18,9 @@ jest.mock('expo-notifications', () => ({
   requestPermissionsAsync: jest.fn(),
   scheduleNotificationAsync: jest.fn(),
 }));
+
+jest.mock('expo-secure-store', () => ({
+  deleteItemAsync: jest.fn(),
+  getItemAsync: jest.fn(),
+  setItemAsync: jest.fn(),
+}));

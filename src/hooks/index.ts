@@ -3,6 +3,7 @@ export * from './useDecks';
 export * from './useCards';
 export * from './useNetworkStatus';
 export * from './useAddCardForm';
+export * from './useAuth';
 export * from './useImagePicker';
 export * from './useQuiz';
 export * from './useSettings';

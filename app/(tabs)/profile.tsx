@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../src/constants';
-import { useSettings, useThemeColors } from '../../src/hooks';
+import { useAuth, useSettings, useThemeColors } from '../../src/hooks';
 import {
   cancelDailyReminder,
   playLightHaptic,
@@ -78,6 +78,7 @@ const styles = StyleSheet.create({
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
+  const { logout, user } = useAuth();
   const {
     dailyReminderEnabled,
     language,
@@ -141,11 +142,29 @@ export default function ProfileScreen() {
     [isReminderUpdating, setDailyReminderEnabled, t]
   );
 
+  const handleLogout = useCallback(() => {
+    logout();
+  }, [logout]);
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.title, { color: colors.text }]}>
         {t('profile.settings')}
       </Text>
+
+      <View style={[styles.section, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          {t('auth.account')}
+        </Text>
+        <Text style={[styles.helperText, { color: colors.mutedText }]}>
+          {user?.email ?? t('auth.signedIn')}
+        </Text>
+        <Pressable style={styles.optionButton} onPress={handleLogout}>
+          <Text style={[styles.optionText, { color: colors.text }]}>
+            {t('auth.logout')}
+          </Text>
+        </Pressable>
+      </View>
 
       <View style={[styles.section, { backgroundColor: colors.surface }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>

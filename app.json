@@ -24,7 +24,11 @@
       },
       "predictiveBackGestureEnabled": false
     },
-    "plugins": ["expo-router", "expo-notifications"],
+    "plugins": [
+      "expo-router",
+      "expo-notifications",
+      "expo-secure-store"
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }
