@@ -9,9 +9,11 @@ type NetworkStatus = {
   isInternetReachable: boolean;
 };
 
-const mapStateToStatus = (state: NetInfoState): NetworkStatus => ({
+export const mapStateToStatus = (state: NetInfoState): NetworkStatus => ({
   isConnected: Boolean(state.isConnected),
-  isInternetReachable: Boolean(state.isInternetReachable),
+  // NetInfo ozellikle web/ilk acilis aninda isInternetReachable icin null
+  // donebilir. Null "offline" degil "henuz bilinmiyor" anlamina gelir.
+  isInternetReachable: state.isInternetReachable !== false,
 });
 
 export const useNetworkStatus = (): NetworkStatus => {

@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import type { AuthSession } from '../constants/types';
 
 // Auth session AsyncStorage'da degil SecureStore'da tutulur.
@@ -6,13 +7,26 @@ import type { AuthSession } from '../constants/types';
 // anlatabilirsin.
 const AUTH_SESSION_KEY = 'langlearner.auth.session';
 
+const useWebStorage = () =>
+  Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage;
+
 export const saveAuthSession = async (session: AuthSession) => {
   // SecureStore string saklar, bu yuzden session JSON'a cevrilir.
-  await SecureStore.setItemAsync(AUTH_SESSION_KEY, JSON.stringify(session));
+  const serializedSession = JSON.stringify(session);
+  const webStorage = useWebStorage();
+  if (webStorage) {
+    webStorage.setItem(AUTH_SESSION_KEY, serializedSession);
+    return;
+  }
+
+  await SecureStore.setItemAsync(AUTH_SESSION_KEY, serializedSession);
 };
 
 export const loadAuthSession = async (): Promise<AuthSession | null> => {
-  const rawSession = await SecureStore.getItemAsync(AUTH_SESSION_KEY);
+  const webStorage = useWebStorage();
+  const rawSession = webStorage
+    ? webStorage.getItem(AUTH_SESSION_KEY)
+    : await SecureStore.getItemAsync(AUTH_SESSION_KEY);
 
   if (!rawSession) {
     return null;
@@ -23,11 +37,21 @@ export const loadAuthSession = async (): Promise<AuthSession | null> => {
   } catch {
     // Bozuk/corrupt JSON kalirsa session temizlenir ve kullanici tekrar login'e
     // yonlendirilir. Bu, uygulamanin acilista crash olmasini engeller.
-    await SecureStore.deleteItemAsync(AUTH_SESSION_KEY);
+    if (webStorage) {
+      webStorage.removeItem(AUTH_SESSION_KEY);
+    } else {
+      await SecureStore.deleteItemAsync(AUTH_SESSION_KEY);
+    }
     return null;
   }
 };
 
 export const clearAuthSession = async () => {
+  const webStorage = useWebStorage();
+  if (webStorage) {
+    webStorage.removeItem(AUTH_SESSION_KEY);
+    return;
+  }
+
   await SecureStore.deleteItemAsync(AUTH_SESSION_KEY);
 };
