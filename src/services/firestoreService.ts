@@ -56,7 +56,11 @@ const integerField = (value: number): FirestoreValue => ({
 
 const extractId = (documentName: string) => {
   const [id = ''] = documentName.split('/').slice(-1);
-  return id;
+  try {
+    return decodeURIComponent(id);
+  } catch {
+    return id;
+  }
 };
 
 const getString = (
