@@ -11,6 +11,9 @@ import settingsReducer, {
   setLanguage,
   setTheme,
 } from '../src/store/slices/settingsSlice';
+import syncReducer, {
+  enqueueSyncOperation,
+} from '../src/store/slices/syncSlice';
 import type { Card, Deck } from '../src/constants/types';
 
 const deck: Deck = {
@@ -66,5 +69,53 @@ describe('redux reducers', () => {
       language: 'tr',
       theme: 'dark',
     });
+  });
+
+  it('keeps only the latest queued upsert for the same deck', () => {
+    const firstState = syncReducer(
+      undefined,
+      enqueueSyncOperation({ deck, id: 'op-1', type: 'upsertDeck' })
+    );
+    const nextState = syncReducer(
+      firstState,
+      enqueueSyncOperation({
+        deck: { ...deck, title: 'Updated' },
+        id: 'op-2',
+        type: 'upsertDeck',
+      })
+    );
+
+    expect(nextState.queue).toEqual([
+      {
+        deck: { ...deck, title: 'Updated' },
+        id: 'op-2',
+        type: 'upsertDeck',
+      },
+    ]);
+  });
+
+  it('keeps card deletions before a queued deck deletion', () => {
+    const withCardDelete = syncReducer(
+      undefined,
+      enqueueSyncOperation({
+        cardId: 'card-1',
+        deckId: 'deck-1',
+        id: 'op-1',
+        type: 'deleteCard',
+      })
+    );
+    const nextState = syncReducer(
+      withCardDelete,
+      enqueueSyncOperation({
+        deckId: 'deck-1',
+        id: 'op-2',
+        type: 'deleteDeck',
+      })
+    );
+
+    expect(nextState.queue.map((operation) => operation.type)).toEqual([
+      'deleteCard',
+      'deleteDeck',
+    ]);
   });
 });

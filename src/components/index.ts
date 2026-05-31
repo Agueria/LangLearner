@@ -1,5 +1,6 @@
 // Central exports for reusable UI components.
 export * from './AuthGate';
+export * from './CloudSyncController';
 export * from './ErrorBoundary';
 export * from './OfflineBanner';
 export * from './DeckCard';

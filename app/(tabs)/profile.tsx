@@ -3,7 +3,12 @@ import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../src/constants';
-import { useAuth, useSettings, useThemeColors } from '../../src/hooks';
+import {
+  useAuth,
+  useCloudSync,
+  useSettings,
+  useThemeColors,
+} from '../../src/hooks';
 import {
   cancelDailyReminder,
   playLightHaptic,
@@ -15,6 +20,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
     flex: 1,
     padding: 16,
+  },
+  disabledButton: {
+    opacity: 0.55,
   },
   helperText: {
     color: COLORS.mutedText,
@@ -79,6 +87,8 @@ const styles = StyleSheet.create({
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const { logout, user } = useAuth();
+  const { error: syncError, isSyncing, lastSyncedAt, pendingCount, syncNow } =
+    useCloudSync();
   const {
     dailyReminderEnabled,
     language,
@@ -162,6 +172,38 @@ export default function ProfileScreen() {
         <Pressable style={styles.optionButton} onPress={handleLogout}>
           <Text style={[styles.optionText, { color: colors.text }]}>
             {t('auth.logout')}
+          </Text>
+        </Pressable>
+      </View>
+
+      <View style={[styles.section, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          {t('sync.title')}
+        </Text>
+        <Text style={[styles.helperText, { color: colors.mutedText }]}>
+          {pendingCount > 0
+            ? t('sync.pending', { count: pendingCount })
+            : t('sync.upToDate')}
+        </Text>
+        {lastSyncedAt.length > 0 && (
+          <Text style={[styles.helperText, { color: colors.mutedText }]}>
+            {t('sync.lastSynced', {
+              value: new Date(lastSyncedAt).toLocaleString(),
+            })}
+          </Text>
+        )}
+        {syncError.length > 0 && (
+          <Text style={[styles.statusText, { color: colors.danger }]}>
+            {syncError}
+          </Text>
+        )}
+        <Pressable
+          disabled={isSyncing}
+          onPress={syncNow}
+          style={[styles.optionButton, isSyncing && styles.disabledButton]}
+        >
+          <Text style={[styles.optionText, { color: colors.text }]}>
+            {isSyncing ? t('sync.syncing') : t('sync.syncNow')}
           </Text>
         </Pressable>
       </View>

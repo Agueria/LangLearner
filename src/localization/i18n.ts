@@ -105,6 +105,14 @@ export const resources = {
         total: 'Total',
         word: 'Word',
       },
+      sync: {
+        lastSynced: 'Last synced: {{value}}',
+        pending: '{{count}} changes waiting to sync',
+        syncNow: 'Sync now',
+        syncing: 'Syncing...',
+        title: 'Cloud sync',
+        upToDate: 'All changes are synced',
+      },
       tabs: {
         decks: 'Decks',
         home: 'Home',
@@ -223,6 +231,14 @@ export const resources = {
         swipeHint: 'Biliyorsan sağa, çalışman gerekiyorsa sola kaydır.',
         total: 'Toplam',
         word: 'Kelime',
+      },
+      sync: {
+        lastSynced: 'Son senkronizasyon: {{value}}',
+        pending: '{{count}} değişiklik senkronizasyon bekliyor',
+        syncNow: 'Şimdi senkronize et',
+        syncing: 'Senkronize ediliyor...',
+        title: 'Cloud senkronizasyon',
+        upToDate: 'Tüm değişiklikler senkronize',
       },
       tabs: {
         decks: 'Desteler',

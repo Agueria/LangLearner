@@ -1,0 +1,217 @@
+import { FIREBASE_PROJECT_ID } from '../constants/config';
+import type { AuthSession, Card, Deck } from '../constants/types';
+
+type FirestoreValue = {
+  integerValue?: string;
+  stringValue?: string;
+};
+
+type FirestoreDocument = {
+  fields?: Record<string, FirestoreValue>;
+  name: string;
+};
+
+type FirestoreListResponse = {
+  documents?: FirestoreDocument[];
+};
+
+export type CloudVocabulary = {
+  cards: Card[];
+  decks: Deck[];
+};
+
+const FIRESTORE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
+
+const encodeSegment = (segment: string) => encodeURIComponent(segment);
+
+const authHeaders = (session: AuthSession) => ({
+  Authorization: `Bearer ${session.tokens.idToken}`,
+  'Content-Type': 'application/json',
+});
+
+const userDecksPath = (userId: string) =>
+  `${FIRESTORE_BASE_URL}/users/${encodeSegment(userId)}/decks`;
+
+const deckPath = (userId: string, deckId: string) =>
+  `${userDecksPath(userId)}/${encodeSegment(deckId)}`;
+
+const cardsPath = (userId: string, deckId: string) =>
+  `${deckPath(userId, deckId)}/cards`;
+
+const cardPath = (userId: string, deckId: string, cardId: string) =>
+  `${cardsPath(userId, deckId)}/${encodeSegment(cardId)}`;
+
+const stringField = (value = ''): FirestoreValue => ({ stringValue: value });
+
+const integerField = (value: number): FirestoreValue => ({
+  integerValue: String(value),
+});
+
+const extractId = (documentName: string) => {
+  const [id = ''] = documentName.split('/').slice(-1);
+  return id;
+};
+
+const getString = (
+  fields: Record<string, FirestoreValue> | undefined,
+  key: string
+) => fields?.[key]?.stringValue ?? '';
+
+const getInteger = (
+  fields: Record<string, FirestoreValue> | undefined,
+  key: string
+) => Number(fields?.[key]?.integerValue ?? 0);
+
+const deckToDocument = (deck: Deck) => ({
+  fields: {
+    cardCount: integerField(deck.cardCount),
+    coverImage: stringField(deck.coverImage),
+    createdAt: stringField(deck.createdAt),
+    description: stringField(deck.description),
+    title: stringField(deck.title),
+  },
+});
+
+const cardToDocument = (card: Card) => ({
+  fields: {
+    createdAt: stringField(card.createdAt),
+    deckId: stringField(card.deckId),
+    meaning: stringField(card.meaning),
+    word: stringField(card.word),
+  },
+});
+
+const documentToDeck = (document: FirestoreDocument): Deck => {
+  const { fields } = document;
+  const coverImage = getString(fields, 'coverImage');
+
+  return {
+    cardCount: getInteger(fields, 'cardCount'),
+    coverImage: coverImage || undefined,
+    createdAt: getString(fields, 'createdAt'),
+    description: getString(fields, 'description'),
+    id: extractId(document.name),
+    title: getString(fields, 'title'),
+  };
+};
+
+const documentToCard = (
+  document: FirestoreDocument,
+  fallbackDeckId: string
+): Card => {
+  const { fields } = document;
+
+  return {
+    createdAt: getString(fields, 'createdAt'),
+    deckId: getString(fields, 'deckId') || fallbackDeckId,
+    id: extractId(document.name),
+    meaning: getString(fields, 'meaning'),
+    word: getString(fields, 'word'),
+  };
+};
+
+const requestFirestore = async (
+  session: AuthSession,
+  url: string,
+  init?: RequestInit
+) => {
+  const response = await fetch(url, {
+    ...init,
+    headers: {
+      ...authHeaders(session),
+      ...(init?.headers ?? {}),
+    },
+  });
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error('Cloud sync failed. Please try again.');
+  }
+
+  return response;
+};
+
+export const upsertCloudDeck = async (session: AuthSession, deck: Deck) => {
+  await requestFirestore(session, deckPath(session.user.id, deck.id), {
+    body: JSON.stringify(deckToDocument(deck)),
+    method: 'PATCH',
+  });
+};
+
+export const deleteCloudDeck = async (session: AuthSession, deckId: string) => {
+  await requestFirestore(session, deckPath(session.user.id, deckId), {
+    method: 'DELETE',
+  });
+};
+
+export const upsertCloudCard = async (session: AuthSession, card: Card) => {
+  await requestFirestore(
+    session,
+    cardPath(session.user.id, card.deckId, card.id),
+    {
+      body: JSON.stringify(cardToDocument(card)),
+      method: 'PATCH',
+    }
+  );
+};
+
+export const deleteCloudCard = async (
+  session: AuthSession,
+  deckId: string,
+  cardId: string
+) => {
+  await requestFirestore(session, cardPath(session.user.id, deckId, cardId), {
+    method: 'DELETE',
+  });
+};
+
+export const fetchCloudVocabulary = async (
+  session: AuthSession
+): Promise<CloudVocabulary> => {
+  const decksResponse = await requestFirestore(
+    session,
+    userDecksPath(session.user.id),
+    { method: 'GET' }
+  );
+
+  if (!decksResponse) {
+    return { cards: [], decks: [] };
+  }
+
+  const deckData = (await decksResponse.json()) as FirestoreListResponse;
+  const decks = deckData.documents?.map(documentToDeck) ?? [];
+
+  const cardsByDeck = await Promise.all(
+    decks.map(async (deck) => {
+      const cardsResponse = await requestFirestore(
+        session,
+        cardsPath(session.user.id, deck.id),
+        { method: 'GET' }
+      );
+
+      if (!cardsResponse) {
+        return [];
+      }
+
+      const cardData = (await cardsResponse.json()) as FirestoreListResponse;
+      return (
+        cardData.documents?.map((document) =>
+          documentToCard(document, deck.id)
+        ) ?? []
+      );
+    })
+  );
+
+  const cards = cardsByDeck.flat();
+
+  return {
+    cards,
+    decks: decks.map((deck) => ({
+      ...deck,
+      cardCount: cards.filter((card) => card.deckId === deck.id).length,
+    })),
+  };
+};

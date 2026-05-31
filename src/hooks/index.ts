@@ -1,6 +1,7 @@
 // Central exports for app hooks.
 export * from './useDecks';
 export * from './useCards';
+export * from './useCloudSync';
 export * from './useNetworkStatus';
 export * from './useAddCardForm';
 export * from './useAuth';

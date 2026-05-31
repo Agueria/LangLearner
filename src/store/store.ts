@@ -15,19 +15,21 @@ import deckReducer from './slices/deckSlice';
 import cardReducer from './slices/cardSlice';
 import settingsReducer from './slices/settingsSlice';
 import authReducer from './slices/authSlice';
+import syncReducer from './slices/syncSlice';
 
 const rootReducer = combineReducers({
   auth: authReducer,
   decks: deckReducer,
   cards: cardReducer,
   settings: settingsReducer,
+  sync: syncReducer,
 });
 
 // Persist user-created content and preferences. Auth tokens live in SecureStore.
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['decks', 'cards', 'settings'],
+  whitelist: ['decks', 'cards', 'settings', 'sync'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
