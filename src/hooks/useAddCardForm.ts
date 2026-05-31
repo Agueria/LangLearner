@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Card } from '../constants';
+import { isGeminiConfigured } from '../constants/config';
 import { translateWord } from '../services/translationService';
 import { validateCardForm, type CardFormErrors } from '../utils/validation';
 import { useCards } from './useCards';
@@ -68,6 +69,10 @@ export const useAddCardForm = ({ deckId, onClose }: UseAddCardFormArgs) => {
 
   const handleTranslate = useCallback(async () => {
     const trimmedWord = word.trim();
+    if (!isGeminiConfigured) {
+      setTranslateError(t('errors.geminiMissing'));
+      return;
+    }
     if (!trimmedWord) {
       // Bos kelime icin API'ye gitmeyiz; kullaniciya aninda yerel hata gosteririz.
       setTranslateError(t('errors.wordFirst'));
@@ -135,6 +140,7 @@ export const useAddCardForm = ({ deckId, onClose }: UseAddCardFormArgs) => {
     isTranslating,
     isCooldown,
     translateError,
+    isGeminiConfigured,
     resetForm,
     handleTranslate,
     handleSubmit,

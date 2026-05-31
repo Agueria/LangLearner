@@ -5,6 +5,7 @@ import {
 
 jest.mock('../src/constants/config', () => ({
   GEMINI_API_KEY: 'test-api-key',
+  isGeminiConfigured: true,
 }));
 
 const mockedFetch = jest.fn();

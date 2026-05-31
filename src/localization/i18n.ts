@@ -55,6 +55,8 @@ export const resources = {
         titlePlaceholder: 'e.g. Travel Vocabulary',
       },
       errors: {
+        geminiMissing:
+          'Gemini is not configured. Add EXPO_PUBLIC_GEMINI_API_KEY to .env and restart Expo.',
         imagePicker: 'Something went wrong while selecting an image.',
         imagePickerTitle: 'Image picker error',
         meaningRequired: 'Meaning is required.',
@@ -182,6 +184,8 @@ export const resources = {
         titlePlaceholder: 'örn. Seyahat kelimeleri',
       },
       errors: {
+        geminiMissing:
+          'Gemini yapılandırılmadı. EXPO_PUBLIC_GEMINI_API_KEY değerini .env dosyasına ekleyip Expoyu yeniden başlat.',
         imagePicker: 'Fotoğraf seçilirken bir sorun oluştu.',
         imagePickerTitle: 'Fotoğraf seçme hatası',
         meaningRequired: 'Anlam zorunludur.',

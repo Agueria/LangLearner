@@ -1,7 +1,7 @@
 // Gemini translation service using REST API.
 // Kart ekleme formunda "Auto-translate" butonu bu servisi cagirir.
 // Servis yalnizca kisa ceviri metni donmeye zorlayan bir prompt yollar.
-import { GEMINI_API_KEY } from '../constants/config';
+import { GEMINI_API_KEY, isGeminiConfigured } from '../constants/config';
 
 type GeminiPart = {
   text: string;
@@ -50,6 +50,10 @@ export const translateWord = async (
   word: string,
   targetLang: string
 ): Promise<string> => {
+  if (!isGeminiConfigured) {
+    throw new Error('Translation failed. Configure Gemini API key.');
+  }
+
   // Prompt'a "Return only..." eklenmesinin nedeni, Gemini'nin aciklama veya
   // cumle uretmesi yerine sadece kart anlamina yazilacak kisa cevabi donmesidir.
   const prompt = `Translate the following word to ${targetLang}. Return only the translated word or short phrase, nothing else: ${word}`;

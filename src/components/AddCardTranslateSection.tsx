@@ -22,6 +22,7 @@ type AddCardTranslateSectionProps = {
   meaningError?: string;
   isTranslating: boolean;
   isCooldown: boolean;
+  isGeminiConfigured: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -52,6 +53,7 @@ export function AddCardTranslateSection({
   meaningError = '',
   isTranslating,
   isCooldown,
+  isGeminiConfigured,
 }: AddCardTranslateSectionProps) {
   const { t } = useTranslation();
   const colors = useThemeColors();
@@ -68,7 +70,7 @@ export function AddCardTranslateSection({
             { backgroundColor: colors.secondarySurface },
           ]}
           onPress={onTranslate}
-          disabled={isTranslating || isCooldown}
+          disabled={isTranslating || isCooldown || !isGeminiConfigured}
         >
           {/* Ceviri devam ederken veya cooldown varken buton kapali kalir.
               Bu Gemini'ye ayni anda cok fazla istek gitmesini engeller. */}
@@ -92,6 +94,9 @@ export function AddCardTranslateSection({
         placeholderTextColor={colors.mutedText}
         editable={!isTranslating}
       />
+      {!isGeminiConfigured && (
+        <Text style={modalStyles.errorText}>{t('errors.geminiMissing')}</Text>
+      )}
       {translateError.length > 0 && (
         // Gemini veya network hatalari meaning inputunun hemen altinda gosterilir.
         <Text style={modalStyles.errorText}>{translateError}</Text>

@@ -47,6 +47,7 @@ export function AddCardModal({
     hasSubmitted,
     isTranslating,
     isCooldown,
+    isGeminiConfigured,
     translateError,
     resetForm,
     handleTranslate,
@@ -104,6 +105,7 @@ export function AddCardModal({
           meaningError={hasSubmitted ? errors.meaning : undefined}
           isTranslating={isTranslating}
           isCooldown={isCooldown}
+          isGeminiConfigured={isGeminiConfigured}
         />
         <View style={[modalStyles.actions, styles.actions]}>
           <Pressable
