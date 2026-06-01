@@ -20,8 +20,10 @@ target is the Android/iOS mobile experience.
 - Lets the user add, edit, and delete vocabulary cards inside each deck.
 - Uses Gemini to auto-translate a word into the selected target language when
   an API key is configured.
-- Persists decks, cards, settings, auth state, and sync metadata locally through
-  Redux Persist + AsyncStorage.
+- Persists decks, cards, settings, and sync metadata locally through Redux
+  Persist + AsyncStorage.
+- Stores Firebase auth session tokens separately in Expo SecureStore instead of
+  putting sensitive auth data into the Redux Persist state.
 - Syncs user-scoped deck/card data to Firestore through the Firestore REST API.
 - Queues local deck/card changes while offline and replays the queue when the
   connection returns.
@@ -130,7 +132,9 @@ presentation:
 1. The user signs in or registers through Firebase Auth REST endpoints.
 2. Auth tokens are saved locally through SecureStore and mirrored in Redux.
 3. Deck/card actions update Redux immediately so the UI stays responsive.
-4. Redux Persist writes the latest state to AsyncStorage for offline startup.
+4. Redux Persist writes deck/card/settings/sync state to AsyncStorage for
+   offline startup. Auth tokens stay outside Redux Persist and are restored from
+   SecureStore during auth bootstrap.
 5. Mutating deck/card actions are added to the sync queue.
 6. `CloudSyncController` watches auth + network state and calls cloud sync when
    the user is signed in and online.
@@ -253,9 +257,10 @@ gh release create v1.0.0 path/to/app-preview.apk \
   --notes "Mobile preview build for the language learner app."
 ```
 
-Current machine status: the source code and `eas.json` are ready for an Android
-preview build, but this machine still needs an Expo/EAS login or `EXPO_TOKEN`.
-A local Android build also needs Java and Android SDK tooling installed.
+Current machine status: Expo/EAS login is available on this machine, so the
+Android preview APK can be produced with the EAS cloud builder. A local Android
+build still requires Java and Android SDK tooling, but that local toolchain is
+not required for the EAS cloud build.
 
 ## Quality Checks
 
@@ -288,9 +293,9 @@ Current local verification on May 31, 2026:
 - `npx expo-doctor`: passed, 18/18 checks.
 - `npx expo export --platform web --output-dir /tmp/langlearner-export-test`:
   passed.
-- `npx eas-cli whoami`: blocked with `Not logged in`.
-- `java -version`: blocked because no Java runtime is installed on this
-  machine.
+- `npx eas-cli whoami`: passed with an authenticated Expo account.
+- Local Android build tooling is optional for this repo because the release APK
+  is expected to come from EAS cloud builds.
 
 ## Manual QA Flow
 
@@ -323,6 +328,5 @@ Use this exact flow for a class presentation:
 
 Firebase Auth, Firestore sync, Gemini translation, offline queueing, SecureStore
 session storage, CI, EAS preview configuration, and mobile screenshot
-documentation are implemented. The only remaining external step for a release
-asset is running EAS with valid Expo credentials and attaching the resulting APK
-to a GitHub Release.
+documentation are implemented. Release assets should be produced from the
+`preview` EAS Android APK profile and attached to the GitHub Release.

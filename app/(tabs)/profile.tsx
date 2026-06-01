@@ -2,7 +2,14 @@
 // Dil, tema, gunluk reminder, logout ve manuel sync aksiyonlari bu ekranda
 // kullaniciya sunulur.
 import { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../src/constants';
 import {
@@ -21,7 +28,10 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: COLORS.background,
     flex: 1,
+  },
+  content: {
     padding: 16,
+    paddingBottom: 32,
   },
   disabledButton: {
     opacity: 0.55,
@@ -169,7 +179,13 @@ export default function ProfileScreen() {
   }, [logout]);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={styles.content}
+    >
+      {/* Profile sekmesinde hesap, sync, dil, tema ve reminder bloklari ayni
+          ekranda oldugu icin kucuk telefonlarda tum icerigin gorulebilmesi
+          icin sayfa ScrollView icinde render edilir. */}
       <Text style={[styles.title, { color: colors.text }]}>
         {t('profile.settings')}
       </Text>
@@ -335,6 +351,6 @@ export default function ProfileScreen() {
           </Text>
         )}
       </View>
-    </View>
+    </ScrollView>
   );
 }

@@ -33,6 +33,13 @@
     ],
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "41afb270-18ac-4a09-a167-4fc1d155536b"
+      }
+    },
+    "owner": "pyderallx"
   }
 }
