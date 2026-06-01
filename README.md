@@ -240,6 +240,24 @@ Notable package choices:
 npx eas-cli build --platform android --profile preview
 ```
 
+Published preview APK:
+
+- GitHub Release:
+  <https://github.com/Agueria/LangLearner/releases/tag/v1.0.0>
+- APK asset:
+  <https://github.com/Agueria/LangLearner/releases/download/v1.0.0/LangLearner-v1.0.0-android-preview.apk>
+- Package id: `com.langlearnermobile.linguadecks`.
+- Version: `1.0.0`, versionCode `1`.
+- SHA-256:
+  `5165492488c0855e5de897fbdbed77c8955a77238248bd3151adbe90b91a76b5`.
+- Source commit: `3d180628343f20086aa33505c6ac7fccfbaad7e7`.
+
+The attached APK was produced with the EAS `preview` profile. The hosted EAS
+cloud build was submitted as build
+`2a0efa0d-1125-4a3c-af0d-291255f33710`; because the hosted queue was slow, the
+release asset was generated with the EAS local builder using the same profile,
+same commit, preview environment variables, and EAS remote Android credentials.
+
 Before the build, log in and add EAS environment variables:
 
 ```sh
@@ -257,10 +275,9 @@ gh release create v1.0.0 path/to/app-preview.apk \
   --notes "Mobile preview build for the language learner app."
 ```
 
-Current machine status: Expo/EAS login is available on this machine, so the
-Android preview APK can be produced with the EAS cloud builder. A local Android
-build still requires Java and Android SDK tooling, but that local toolchain is
-not required for the EAS cloud build.
+Current machine status: Expo/EAS login is available, the EAS project is linked
+as `@pyderallx/linguadecks`, preview environment variables are configured, and
+the local Java/Android SDK toolchain can run EAS local Android builds.
 
 ## Quality Checks
 
@@ -281,12 +298,11 @@ The GitHub Actions workflow in `.github/workflows/ci.yml` runs:
 - `npm run typecheck`
 - `npm test -- --runInBand`
 
-Current local verification on May 31, 2026:
+Current local verification on June 2, 2026:
 
 - `npm run lint`: passed.
 - `npm run typecheck`: passed.
-- `npm test -- --coverage --runInBand`: passed, 54/54 tests, 86.74% line
-  coverage.
+- `npm test`: passed in the ECC pre-push hook, 12/12 suites and 54/54 tests.
 - `npm audit --audit-level=high`: passed for high/critical findings; npm still
   reports moderate Expo dependency-chain advisories that require a breaking Expo
   upgrade to resolve automatically.
@@ -294,8 +310,10 @@ Current local verification on May 31, 2026:
 - `npx expo export --platform web --output-dir /tmp/langlearner-export-test`:
   passed.
 - `npx eas-cli whoami`: passed with an authenticated Expo account.
-- Local Android build tooling is optional for this repo because the release APK
-  is expected to come from EAS cloud builds.
+- `npx eas-cli build --platform android --profile preview --local`: passed and
+  wrote `dist/LangLearner-v1.0.0-eas-preview.apk`.
+- `aapt dump badging`: confirmed package `com.langlearnermobile.linguadecks`,
+  version `1.0.0`, versionCode `1`, and targetSdk `36`.
 
 ## Manual QA Flow
 
@@ -328,5 +346,5 @@ Use this exact flow for a class presentation:
 
 Firebase Auth, Firestore sync, Gemini translation, offline queueing, SecureStore
 session storage, CI, EAS preview configuration, and mobile screenshot
-documentation are implemented. Release assets should be produced from the
-`preview` EAS Android APK profile and attached to the GitHub Release.
+documentation are implemented. The Android preview APK is attached to the
+GitHub Release and was produced from the `preview` EAS Android APK profile.
