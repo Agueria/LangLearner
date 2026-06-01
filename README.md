@@ -249,14 +249,11 @@ Published preview APK:
 - Package id: `com.langlearnermobile.linguadecks`.
 - Version: `1.0.0`, versionCode `1`.
 - SHA-256:
-  `5165492488c0855e5de897fbdbed77c8955a77238248bd3151adbe90b91a76b5`.
-- Source commit: `3d180628343f20086aa33505c6ac7fccfbaad7e7`.
+  `58d36e53870f7f1bf89453b405a889290e313bd7183838f0a31a178012f0cf8f`.
+- Source commit: `382548757002a0c5fe04c661a3a004c2d767d477`.
 
-The attached APK was produced with the EAS `preview` profile. The hosted EAS
-cloud build was submitted as build
-`2a0efa0d-1125-4a3c-af0d-291255f33710`; because the hosted queue was slow, the
-release asset was generated with the EAS local builder using the same profile,
-same commit, preview environment variables, and EAS remote Android credentials.
+The attached APK was produced with the EAS local builder using the `preview`
+profile, preview environment variables, and EAS remote Android credentials.
 
 Before the build, log in and add EAS environment variables:
 
