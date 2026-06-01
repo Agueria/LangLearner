@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -74,6 +75,12 @@ const styles = StyleSheet.create({
   },
   cardFace: {
     backfaceVisibility: 'hidden',
+  },
+  cardFaceAnswered: {
+    // Cevap acikken kartin ust kosesinde swipe rozetleri gosteriliyor.
+    // Icerigi asagi almak, "Meaning" ve kelime metninin bu rozetlerin altinda
+    // kalmasini engeller.
+    paddingTop: 58,
   },
   container: {
     backgroundColor: COLORS.background,
@@ -190,6 +197,7 @@ export default function QuizScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const { deckId: deckIdParam } = useLocalSearchParams<{ deckId: string }>();
   const deckId = typeof deckIdParam === 'string' ? deckIdParam : '';
   const { decks } = useDecks();
@@ -216,6 +224,22 @@ export default function QuizScreen() {
   const flipProgress = useSharedValue(0);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
+  const screenContainerStyle = useMemo(
+    () => [
+      styles.container,
+      {
+        backgroundColor: colors.background,
+        // Quiz route'u custom back link kullandigi icin native stack header'i
+        // status bar alanini bizim icin ayirmiyor. Safe-area top padding,
+        // "Back to Deck" metninin saat/operator alaninin altinda kalmasini
+        // garanti eder. Bottom padding de gesture bar olan cihazlarda alt
+        // cevap butonlarinin ekrana yapismasini engeller.
+        paddingBottom: Math.max(insets.bottom, 16),
+        paddingTop: insets.top + 16,
+      },
+    ],
+    [colors.background, insets.bottom, insets.top]
+  );
 
   const handleBackToDeck = useCallback(() => {
     router.push(`/deck/${deckId}`);
@@ -292,14 +316,15 @@ export default function QuizScreen() {
   });
 
   const faceAnimatedStyle = useAnimatedStyle(() => ({
-    // Flip animasyonu kart yuzunun Y ekseninde donmesiyle olusur.
+    // Onceki surumde ayni kart yuzunu 180 derece donduruyorduk. iOS/Expo Go'da
+    // backfaceVisibility ile birlikte bu, cevap acildiginda tum metnin
+    // gorunmez kalmasina yol acabiliyor. Burada state degisimini hafif bir
+    // scale/opacity gecisiyle hissettiriyoruz; icerik hicbir zaman ters
+    // cevrilmedigi icin meaning metni her platformda okunur kalir.
+    opacity: interpolate(flipProgress.value, [0, 0.5, 1], [1, 0.96, 1]),
     transform: [
       {
-        rotateY: `${interpolate(
-          flipProgress.value,
-          [0, 1],
-          [0, 180]
-        )}deg`,
+        scale: interpolate(flipProgress.value, [0, 0.5, 1], [1, 0.985, 1]),
       },
     ],
   }));
@@ -333,7 +358,7 @@ export default function QuizScreen() {
   if (!deck) {
     // Deck bulunamazsa fallback gosterilir; route param hatasi app'i dusurmez.
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={screenContainerStyle}>
         <Pressable style={styles.backButton} onPress={handleBackToDeck}>
           <Text style={[styles.backText, { color: colors.primary }]}>
             {t('actions.backToDeck')}
@@ -349,7 +374,7 @@ export default function QuizScreen() {
   if (!currentCard) {
     // Bos deck icin quiz baslamaz; kullaniciya kart eklemesi soylenir.
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={screenContainerStyle}>
         <Pressable style={styles.backButton} onPress={handleBackToDeck}>
           <Text style={[styles.backText, { color: colors.primary }]}>
             {t('actions.backToDeck')}
@@ -366,7 +391,7 @@ export default function QuizScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={screenContainerStyle}>
       <Pressable style={styles.backButton} onPress={handleBackToDeck}>
         <Text style={[styles.backText, { color: colors.primary }]}>
           {t('actions.backToDeck')}
@@ -407,7 +432,13 @@ export default function QuizScreen() {
               </View>
             </>
           )}
-          <Animated.View style={[styles.cardFace, faceAnimatedStyle]}>
+          <Animated.View
+            style={[
+              styles.cardFace,
+              faceAnimatedStyle,
+              isAnswerVisible && styles.cardFaceAnswered,
+            ]}
+          >
             <Text style={[styles.label, { color: colors.mutedTextAlt }]}>
               {t('quiz.word')}
             </Text>
